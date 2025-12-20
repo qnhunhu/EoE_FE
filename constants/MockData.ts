@@ -1,5 +1,5 @@
 
-import { AuthResponse } from '@/types/Account';
+import { Account, AuthResponse } from '@/types/Account';
 import { Cart } from '@/types/Cart';
 import { CartItem } from '@/types/CartItem';
 import { Order } from '@/types/Order';
@@ -76,6 +76,13 @@ export const MOCK_USER: AuthResponse = {
     phone: '0901234567',
     address: '123 Fake Street, HCM',
     token: 'mock-jwt-token-123456',
+};
+
+export const MOCK_ACCOUNT: Account = {
+    ...MOCK_USER,
+    orders: [],
+    complaints: [],
+    ratings: [],
 };
 
 export const MOCK_CART_ITEMS: CartItem[] = [

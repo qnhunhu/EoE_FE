@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContent';
 import useOrdersDistributor from '@/hooks/useOrderByDistributor';
 import useReturnRequestsByDistributor from '@/hooks/useReturnRequestByDistributor';
@@ -81,7 +81,7 @@ export default function ExchangeAndReturnScreen() {
 
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()}>
@@ -120,7 +120,7 @@ export default function ExchangeAndReturnScreen() {
                 ItemSeparatorComponent={() => <View style={styles.separator} />}
                 />
 
-        </View>
+        </SafeAreaView>
     );
 
 }

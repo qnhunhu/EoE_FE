@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 // const orders = Array.from({ length: 8 }).map((_, i) => ({
 
 //     id: i + 1,
@@ -59,7 +60,7 @@ const { orders, loading,refetch } = useOrdersDistributor(userId || 6);
     const router = useRouter();
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => { router.replace('/(distributor-tabs)/DistributorMainScreen') }}>
@@ -85,7 +86,7 @@ const { orders, loading,refetch } = useOrdersDistributor(userId || 6);
                 )}
                 ItemSeparatorComponent={() => <View style={styles.separator} />}
             />
-        </View>
+        </SafeAreaView>
     );
 }
 

@@ -34,10 +34,10 @@ export default function HomeScreen() {
           <Text style={styles.location}>Ho Chi Minh City, VN</Text>
         </View>
         <View style={styles.iconRow}>
-          <TouchableOpacity style={styles.iconButton} onPress={handleCartPress}>
+          {/* <TouchableOpacity style={styles.iconButton} onPress={handleCartPress}>
             <Ionicons name="notifications-outline" size={24} color={Colors.light.text.primary} />
             <View style={styles.badge}><Text style={styles.badgeText}>2</Text></View>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           <TouchableOpacity style={styles.iconButton} onPress={handleCartPress}>
             <Ionicons name="cart-outline" size={24} color={Colors.light.text.primary} />
@@ -71,16 +71,12 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      {/* <StatusBar barStyle="dark-content" backgroundColor="#FAFAFA" /> */}
-      {/* <SafeAreaView style={{ flex: 0, backgroundColor: '#FAFAFA' }} /> */}
 
       <SafeAreaView style={styles.content}>
         <FlatList
           ListHeaderComponent={
             <>
               {renderHeader()}
-
-              {/* Banner / Promotion could go here */}
 
               {/* Categories */}
               <View style={styles.categorySection}>

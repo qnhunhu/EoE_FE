@@ -1,6 +1,4 @@
-import axios from 'axios';
 import { useEffect, useState } from 'react';
-import Config from '../constants';
 import { Store } from '../types/Store';
 
 export default function useStore(storeId: number) {
@@ -10,16 +8,11 @@ export default function useStore(storeId: number) {
 
   const fetchStore = () => {
     setLoading(true);
-    axios.get(`${Config.API_BASE_URL}/api/Store/${storeId}`)
-      .then(res => {
-        setStore(res.data);
-        setError(null);
-      })
-      .catch(err => {
-        console.error('Failed to fetch store', err);
-        setError('Failed to fetch store');
-      })
-      .finally(() => setLoading(false));
+    // Simulate network delay
+    setTimeout(() => {
+      setStore(require('../constants/MockData').MOCK_STORE);
+      setLoading(false);
+    }, 500);
   };
 
   useEffect(() => {

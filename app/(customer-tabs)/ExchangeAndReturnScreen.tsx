@@ -1,18 +1,34 @@
+
+import globalStyles from '@/assets/styles/GlobalStyle';
+import { Colors } from '@/constants/Colors';
 import useCreateReturn from '@/hooks/useCreateReturn';
 import { Ionicons } from '@expo/vector-icons';
-import { Picker } from '@react-native-picker/picker'; // Import Picker
+import { Picker } from '@react-native-picker/picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
+} from 'react-native';
+
 export default function ExchangeAndReturnScreen() {
-    const { order } = useLocalSearchParams(); // Get the order details from the route parameters
+    const { order } = useLocalSearchParams();
     const router = useRouter();
 
-    const parsedOrder = JSON.parse(order as string); // Parse the order details
-    const [selectedOption, setSelectedOption] = useState('');
+    const parsedOrder = order ? JSON.parse(order as string) : {};
+    const [selectedOption, setSelectedOption] = useState('exchange');
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [reason, setReason] = useState('User requested exchange/return');
     const { createReturn } = useCreateReturn();
+
     const handleConfirm = () => {
         setIsModalVisible(true);
     }
@@ -24,7 +40,7 @@ export default function ExchangeAndReturnScreen() {
     const handleModalConfirm = () => {
         createReturn({
             orderId: parsedOrder.orderId as number,
-            reason: reason 
+            reason: reason
         });
 
         setIsModalVisible(false);
@@ -32,44 +48,62 @@ export default function ExchangeAndReturnScreen() {
     };
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             {/* Header with Back Button */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.replace(`/(tabs)/MyOrders`)} style={styles.backButton}>
-                    <Ionicons name="caret-back-outline" size={24} color="#fff" />
+                    <Ionicons name="arrow-back" size={24} color={Colors.light.text.primary} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Exchange/Return</Text>
+                <Text style={styles.headerTitle}>Exchange / Return</Text>
             </View>
 
-            <View style={styles.form}>
-                <Text style={styles.label}>You want to:</Text>
-                <View style={styles.pickerContainer}>
-                    <Picker style={styles.picker}
-                        selectedValue={selectedOption}
-                        onValueChange={(itemValue) => setSelectedOption(itemValue)}>
-                        <Picker.Item label="Exchange" value="exchange" />
-                        <Picker.Item label="Return" value="return" />
-                    </Picker>
-                </View>
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={{ flex: 1 }}
+            >
+                <ScrollView contentContainerStyle={styles.form} showsVerticalScrollIndicator={false}>
 
+                    <View style={styles.card}>
+                        <Text style={styles.label}>I want to:</Text>
+                        <View style={styles.pickerContainer}>
+                            <Picker style={styles.picker}
+                                selectedValue={selectedOption}
+                                onValueChange={(itemValue) => setSelectedOption(itemValue)}>
+                                <Picker.Item label="Exchange Item" value="exchange" />
+                                <Picker.Item label="Return Item" value="return" />
+                            </Picker>
+                        </View>
+                    </View>
 
-                <Text style={styles.label}>Why do you want to exchange/return the item?</Text>
-                <TextInput
-                    style={[styles.input, styles.textArea]}
-                    placeholder="Tell us your reason"
-                    multiline
-                    onChangeText={(text) => setReason(text)}
-                />
+                    <View style={styles.card}>
+                        <Text style={styles.label}>Reason for Request</Text>
+                        <TextInput
+                            style={styles.textArea}
+                            placeholder="Please describe why you want to exchange or return..."
+                            multiline
+                            onChangeText={(text) => setReason(text)}
+                            value={reason === 'User requested exchange/return' ? '' : reason}
+                            placeholderTextColor={Colors.light.text.light}
+                        />
+                    </View>
 
-                <Text style={styles.label}>
-                    If returning the item, please select a refund method.
-                </Text>
-                <TextInput style={styles.input} placeholder="Select a payment method" />
+                    {selectedOption === 'return' && (
+                        <View style={styles.card}>
+                            <Text style={styles.label}>Preferred Refund Method</Text>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Select a refund method (e.g. Bank Transfer)"
+                                placeholderTextColor={Colors.light.text.light}
+                            />
+                        </View>
+                    )}
 
-                <TouchableOpacity style={styles.confirmButton} onPress={handleConfirm}>
-                    <Text style={styles.confirmButtonText}>Confirm</Text>
-                </TouchableOpacity>
-            </View>
+                    <TouchableOpacity style={[globalStyles.btnPrimary, { marginTop: 20 }]} onPress={handleConfirm}>
+                        <Text style={globalStyles.btnPrimaryText}>Submit Request</Text>
+                    </TouchableOpacity>
+                </ScrollView>
+            </KeyboardAvoidingView>
+
             {/* Confirmation Modal */}
             <Modal
                 visible={isModalVisible}
@@ -79,8 +113,12 @@ export default function ExchangeAndReturnScreen() {
             >
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContainer}>
+                        <View style={styles.modalIcon}>
+                            <Ionicons name="alert-circle-outline" size={48} color={Colors.light.primary} />
+                        </View>
+                        <Text style={styles.modalTitle}>Confirm Request</Text>
                         <Text style={styles.modalText}>
-                            You really want to exchange/return that items
+                            Are you sure you want to {selectedOption} this item?
                         </Text>
                         <View style={styles.modalButtons}>
                             <TouchableOpacity style={styles.modalCancelButton} onPress={handleCancel}>
@@ -93,71 +131,83 @@ export default function ExchangeAndReturnScreen() {
                     </View>
                 </View>
             </Modal>
-        </View>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F4F4F4',
+        backgroundColor: Colors.light.background,
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#006D5B',
-        padding: 16,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        backgroundColor: '#fff',
+        borderBottomWidth: 1,
+        borderBottomColor: Colors.light.border,
     },
     backButton: {
         marginRight: 16,
+        padding: 4,
     },
     headerTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#fff',
+        color: Colors.light.text.primary,
     },
     form: {
         padding: 16,
     },
-    pickerContainer: {
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 8,
-        marginBottom: 16,
+    card: {
         backgroundColor: '#fff',
-    },
-    picker: {
-        height: 50,
-        width: '100%',
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 16,
+        ...Platform.select({
+            ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4 },
+            android: { elevation: 2 }
+        })
     },
     label: {
-        fontSize: 16,
-        fontWeight: 'bold',
+        fontSize: 14,
+        fontWeight: '600',
         marginBottom: 8,
+        color: Colors.light.text.primary,
+    },
+    pickerContainer: {
+        borderWidth: 1,
+        borderColor: '#eee',
+        borderRadius: 8,
+        backgroundColor: '#fafafa',
+        overflow: 'hidden',
+    },
+    picker: {
+        height: Platform.OS === 'ios' ? 150 : 50,
+        width: '100%',
     },
     input: {
         borderWidth: 1,
-        borderColor: '#ddd',
+        borderColor: '#eee',
         borderRadius: 8,
         padding: 12,
-        marginBottom: 16,
-        backgroundColor: '#fff',
+        backgroundColor: '#fafafa',
+        color: Colors.light.text.primary,
     },
     textArea: {
-        height: 100,
-        textAlignVertical: 'top',
-    },
-    confirmButton: {
-        backgroundColor: '#C22727',
-        paddingVertical: 12,
+        borderWidth: 1,
+        borderColor: '#eee',
         borderRadius: 8,
-        alignItems: 'center',
+        padding: 12,
+        backgroundColor: '#fafafa',
+        height: 120,
+        textAlignVertical: 'top',
+        color: Colors.light.text.primary,
     },
-    confirmButtonText: {
-        color: '#fff',
-        fontWeight: 'bold',
-        fontSize: 16,
-    },
+
+    // Modal
     modalOverlay: {
         flex: 1,
         justifyContent: 'center',
@@ -165,44 +215,58 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
     },
     modalContainer: {
-        width: '80%',
+        width: '85%',
         backgroundColor: '#fff',
-        borderRadius: 8,
-        padding: 20,
+        borderRadius: 20,
+        padding: 24,
         alignItems: 'center',
+    },
+    modalIcon: {
+        marginBottom: 16,
+        backgroundColor: '#E0F2F1',
+        padding: 16,
+        borderRadius: 50,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: Colors.light.text.primary,
+        marginBottom: 8,
     },
     modalText: {
         fontSize: 16,
-        fontWeight: 'bold',
         textAlign: 'center',
-        marginBottom: 20,
+        marginBottom: 24,
+        color: Colors.light.text.secondary,
+        lineHeight: 22,
     },
     modalButtons: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         width: '100%',
+        gap: 12,
     },
     modalCancelButton: {
         flex: 1,
-        backgroundColor: '#006D5B',
-        paddingVertical: 10,
-        borderRadius: 8,
+        backgroundColor: '#f5f5f5',
+        paddingVertical: 12,
+        borderRadius: 12,
         alignItems: 'center',
-        marginRight: 10,
     },
     modalCancelButtonText: {
-        color: '#fff',
+        color: Colors.light.text.primary,
         fontWeight: 'bold',
+        fontSize: 16,
     },
     modalConfirmButton: {
         flex: 1,
-        backgroundColor: '#C22727',
-        paddingVertical: 10,
-        borderRadius: 8,
+        backgroundColor: Colors.light.primary,
+        paddingVertical: 12,
+        borderRadius: 12,
         alignItems: 'center',
     },
     modalConfirmButtonText: {
         color: '#fff',
         fontWeight: 'bold',
+        fontSize: 16,
     },
 });

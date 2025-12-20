@@ -1,26 +1,35 @@
+
+import globalStyles from '@/assets/styles/GlobalStyle';
+import { Colors } from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Image, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+    Image,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
+} from 'react-native';
 
 export default function ReviewProductScreen() {
     const router = useRouter();
 
     const { order } = useLocalSearchParams();
-    const parsedOrder = JSON.parse(order as string); // Parse the order details
-
-    const [rating, setRating] = useState(0); // State for star rating
-    const [comment, setComment] = useState(''); // State for user comment
+    const parsedOrder = order ? JSON.parse(order as string) : { items: [] };
 
     const [reviews, setReviews] = useState(
-        parsedOrder.items.map(() => ({
+        parsedOrder.items ? parsedOrder.items.map(() => ({
             rating: 0,
             comment: '',
-        }))
+        })) : []
     );
 
     const handleRating = (index: number, value: number) => {
-        setReviews((prevReviews) =>
+        setReviews((prevReviews: any[]) =>
             prevReviews.map((review, i) =>
                 i === index ? { ...review, rating: value } : review
             )
@@ -29,7 +38,7 @@ export default function ReviewProductScreen() {
 
     // Handle comment change for a specific item
     const handleCommentChange = (index: number, text: string) => {
-        setReviews((prevReviews) =>
+        setReviews((prevReviews: any[]) =>
             prevReviews.map((review, i) =>
                 i === index ? { ...review, comment: text } : review
             )
@@ -37,7 +46,7 @@ export default function ReviewProductScreen() {
     };
 
     const handleSubmit = () => {
-        const incompleteReviews = reviews.some((review) =>
+        const incompleteReviews = reviews.some((review: any) =>
             review.rating === 0 || review.comment.trim() === ''
         );
         if (incompleteReviews) {
@@ -52,188 +61,191 @@ export default function ReviewProductScreen() {
     };
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             {/* Header with Back Button */}
-            <SafeAreaView style={styles.header}>
+            <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                    <Ionicons name="caret-back-outline" size={24} color="#fff" />
+                    <Ionicons name="arrow-back" size={24} color={Colors.light.text.primary} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Review</Text>
-            </SafeAreaView>
+                <Text style={styles.headerTitle}>Write Review</Text>
+            </View>
 
-            <ScrollView style={styles.content}>
-                {parsedOrder.items.map((item, index) => (
-                    <View key={index} style={styles.itemReview}>
-                        {/* Product Information */}
-                        <View style={styles.productRow}>
-                            <Image source={item.image} style={styles.productImage} />
-                            <View style={{ flex: 1, marginLeft: 10 }}>
-                                <Text style={styles.textBold}>{item.name}</Text>
-                                <Text style={styles.textPrice}>${item.price}</Text>
-                                <Text style={styles.textOldPrice}>${item.oldPrice}</Text>
-                                <Text style={styles.textGray}>Quantity: {item.quantity}</Text>
+            <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+                {parsedOrder.items && parsedOrder.items.length > 0 ? (
+                    parsedOrder.items.map((item: any, index: number) => (
+                        <View key={index} style={[styles.itemReview, globalStyles.shadow]}>
+                            {/* Product Information */}
+                            <View style={styles.productRow}>
+                                <Image
+                                    source={item.image ? { uri: item.image } : require('../../assets/images/logoNormal.png')}
+                                    style={styles.productImage}
+                                />
+                                <View style={{ flex: 1, marginLeft: 12 }}>
+                                    <Text style={styles.textBold} numberOfLines={2}>{item.name}</Text>
+                                    <Text style={styles.textGray}>Quantity: {item.quantity}</Text>
+                                </View>
+                            </View>
+
+                            <View style={styles.divider} />
+
+                            {/* Product Reviews */}
+                            <Text style={styles.label}>Rate Product</Text>
+                            <View style={styles.ratingRow}>
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                    <TouchableOpacity key={star} onPress={() => handleRating(index, star)}>
+                                        <Ionicons
+                                            name={star <= reviews[index].rating ? 'star' : 'star-outline'}
+                                            size={36}
+                                            color={star <= reviews[index].rating ? "#FFD700" : "#ddd"}
+                                            style={{ marginHorizontal: 4 }}
+                                        />
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+
+                            {/* Write Your Comment */}
+                            <Text style={styles.label}>Your Review</Text>
+                            <TextInput
+                                style={styles.textArea}
+                                placeholder="Share your experience with this product..."
+                                multiline
+                                value={reviews[index].comment}
+                                onChangeText={(text) => handleCommentChange(index, text)}
+                                placeholderTextColor={Colors.light.text.light}
+                            />
+
+                            {/* Add Photos and Videos */}
+                            <View style={styles.mediaContainer}>
+                                <TouchableOpacity style={styles.mediaBox}>
+                                    <Ionicons name="camera-outline" size={24} color={Colors.light.primary} />
+                                    <Text style={styles.mediaText}>Add Photo</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={styles.mediaBox}>
+                                    <Ionicons name="videocam-outline" size={24} color={Colors.light.primary} />
+                                    <Text style={styles.mediaText}>Add Video</Text>
+                                </TouchableOpacity>
                             </View>
                         </View>
-
-                        {/* Product Reviews */}
-                        <Text style={styles.label}>PRODUCT REVIEWS</Text>
-                        <View style={styles.ratingRow}>
-                            {[1, 2, 3, 4, 5].map((star) => (
-                                <TouchableOpacity key={star} onPress={() => handleRating(index, star)}>
-                                    <Ionicons
-                                        name={star <= reviews[index].rating ? 'star' : 'star-outline'}
-                                        size={32}
-                                        color="#FF6F61"
-                                    />
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-
-                        {/* Add Photos and Videos */}
-                        <Text style={styles.label}>ADD PHOTOS AND VIDEO</Text>
-                        <View style={styles.mediaRow}>
-                            <TouchableOpacity style={styles.mediaBox}>
-                                <Text style={styles.mediaText}>Photo</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styles.mediaBox}>
-                                <Text style={styles.mediaText}>Video</Text>
-                            </TouchableOpacity>
-                        </View>
-
-                        {/* Write Your Comment */}
-                        <Text style={styles.label}>WRITE YOUR COMMENT</Text>
-                        <TextInput
-                            style={[styles.input, styles.textArea]}
-                            placeholder="Share with us your experiences"
-                            multiline
-                            value={reviews[index].comment}
-                            onChangeText={(text) => handleCommentChange(index, text)}
-                        />
-                    </View>
-                ))}
+                    ))
+                ) : (
+                    <Text style={{ textAlign: 'center', marginTop: 20, color: Colors.light.text.secondary }}>No items to review</Text>
+                )}
 
                 {/* Submit Button */}
-                <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-                    <Text style={styles.submitButtonText}>Send</Text>
-                </TouchableOpacity>
+                {parsedOrder.items && parsedOrder.items.length > 0 && (
+                    <TouchableOpacity style={[globalStyles.btnPrimary, styles.submitButton]} onPress={handleSubmit}>
+                        <Text style={globalStyles.btnPrimaryText}>Submit Review</Text>
+                    </TouchableOpacity>
+                )}
             </ScrollView>
-        </View>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F4F4F4',
+        backgroundColor: Colors.light.background,
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#006D5B',
-        padding: 16,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        backgroundColor: '#fff',
+        borderBottomWidth: 1,
+        borderBottomColor: Colors.light.border,
     },
     backButton: {
         marginRight: 16,
+        padding: 4,
     },
     headerTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#fff',
+        color: Colors.light.text.primary,
     },
     content: {
-        padding: 15,
-        paddingBottom: 100,
+        padding: 16,
+        paddingBottom: 40,
     },
     itemReview: {
-        marginBottom: 20, // Adds spacing between each review item
-        padding: 16, // Adds padding inside the review container
-        backgroundColor: '#fff', // Sets the background color to white
-        borderRadius: 8, // Rounds the corners of the review container
-        shadowColor: '#000', // Adds a shadow effect
-        shadowOffset: { width: 0, height: 2 }, // Shadow offset
-        shadowOpacity: 0.1, // Shadow opacity
-        shadowRadius: 4, // Shadow blur radius
-        elevation: 2, // Adds elevation for Android shadow
+        marginBottom: 20,
+        padding: 16,
+        backgroundColor: '#fff',
+        borderRadius: 16,
     },
     productRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 20,
+        marginBottom: 16,
     },
     productImage: {
         width: 60,
         height: 60,
         borderRadius: 8,
+        backgroundColor: '#f5f5f5',
     },
     textBold: {
-        fontWeight: 'bold',
-        color: '#333',
-    },
-    textPrice: {
-        color: '#C22727',
-        fontWeight: 'bold',
-        marginTop: 4,
-    },
-    textOldPrice: {
-        color: '#999',
-        textDecorationLine: 'line-through',
+        fontWeight: '600',
+        color: Colors.light.text.primary,
+        fontSize: 16,
     },
     textGray: {
-        color: '#666',
-        fontSize: 12,
+        color: Colors.light.text.secondary,
+        fontSize: 14,
         marginTop: 4,
     },
+    divider: {
+        height: 1,
+        backgroundColor: '#f0f0f0',
+        marginBottom: 16,
+    },
     label: {
-        fontSize: 16,
-        fontWeight: 'bold',
+        fontSize: 14,
+        fontWeight: '600',
         marginBottom: 8,
-        color: '#333',
+        color: Colors.light.text.primary,
     },
     ratingRow: {
         flexDirection: 'row',
         marginBottom: 20,
-    },
-    mediaRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 20,
-    },
-    mediaBox: {
-        width: '48%',
-        height: 100,
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 8,
         justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#fff',
-    },
-    mediaText: {
-        color: '#999',
-        fontSize: 14,
-    },
-    input: {
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 8,
-        padding: 12,
-        marginBottom: 16,
-        backgroundColor: '#fff',
     },
     textArea: {
-        height: 100,
+        borderWidth: 1,
+        borderColor: '#eee',
+        borderRadius: 12,
+        padding: 12,
+        marginBottom: 16,
+        backgroundColor: '#fafafa',
+        height: 120,
         textAlignVertical: 'top',
+        fontSize: 14,
+        color: Colors.light.text.primary,
+    },
+    mediaContainer: {
+        flexDirection: 'row',
+        gap: 12,
+    },
+    mediaBox: {
+        flex: 1,
+        borderWidth: 1,
+        borderColor: Colors.light.primary,
+        borderStyle: 'dashed',
+        borderRadius: 12,
+        height: 80,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#F0FDF4', // Very light green
+    },
+    mediaText: {
+        color: Colors.light.primary,
+        fontSize: 12,
+        marginTop: 4,
+        fontWeight: '500',
     },
     submitButton: {
-        backgroundColor: '#FF6F61',
-        paddingVertical: 12,
-        borderRadius: 8,
-        alignItems: 'center',
-        marginBottom: 60,
-    },
-    submitButtonText: {
-        color: '#fff',
-        fontWeight: 'bold',
-        fontSize: 16,
+        marginBottom: 20,
     },
 });

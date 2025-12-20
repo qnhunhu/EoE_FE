@@ -68,6 +68,16 @@ export const MOCK_PRODUCTS: Product[] = [
     },
 ];
 
+export const MOCK_STORE: any = {
+    storeId: 1,
+    sellerId: 1,
+    storeName: 'Ba Huan Store',
+    businessLicense: 'BL-123456',
+    description: 'Quality eggs since 1990',
+    eggCount: 5,
+    eggs: MOCK_PRODUCTS,
+};
+
 export const MOCK_USER: AuthResponse = {
     userId: 1,
     email: 'datrobot@example.com',

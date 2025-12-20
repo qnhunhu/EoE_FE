@@ -1,88 +1,97 @@
+
 import ProductCard from '@/components/ProductCard';
+import { Colors } from '@/constants/Colors';
 import useEggProducts from '@/hooks/useEggProducts';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRouter } from 'expo-router';
-import React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useEffect, useRef } from 'react';
+import {
+    ActivityIndicator,
+    Animated,
+    Dimensions,
+    SafeAreaView,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
+} from 'react-native';
+
+const { width } = Dimensions.get('window');
+
 export default function PaymentSuccessfulScreen() {
     const router = useRouter();
     const navigation = useNavigation();
-   const { products, loading } = useEggProducts();
-   if (loading) {
-    return <Text>Loading...</Text>;
-   }
-    const handleChangeToShoppingCart = () => {
+    const { products, loading } = useEggProducts();
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+    const scaleAnim = useRef(new Animated.Value(0.5)).current;
 
-        router.push('/ShoppingCart');
-    }
+    useEffect(() => {
+        Animated.parallel([
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 800,
+                useNativeDriver: true,
+            }),
+            Animated.spring(scaleAnim, {
+                toValue: 1,
+                friction: 6,
+                useNativeDriver: true,
+            })
+        ]).start();
+    }, []);
+
+    const handleBackToHome = () => {
+        router.replace('/(tabs)/HomeScreen');
+    };
 
     return (
         <View style={styles.container}>
-            {/* Header */}
-            <SafeAreaView style={{
-                backgroundColor: '#fff',
-                paddingHorizontal: 16,
-                paddingBottom: 8,
-                zIndex: 10,
-            }}>
-                <TouchableOpacity
-                    onPress={() => router.replace('/HomeScreen')}
-                    style={styles.backButton}
-                >
-                    <Ionicons name="caret-back-outline" size={24} color="#006D5B" />
-                </TouchableOpacity>
-                <View style={styles.heartIcons}>
-                    <TouchableOpacity style={styles.heartIcon} onPress={() => handleChangeToShoppingCart()}>
-                        <Ionicons name="heart" size={20} color="white" />
-                        <View style={styles.badge}><Text style={styles.badgeText}>12</Text></View>
-                    </TouchableOpacity>
-                    <View style={styles.heartIcon}>
-                        <Ionicons name="chatbubble" size={20} color="white" />
-                        <View style={styles.badge}><Text style={styles.badgeText}>12</Text></View>
-                    </View>
-                </View>
-            </SafeAreaView>
+            <StatusBar barStyle="light-content" backgroundColor={Colors.light.primary} />
+            <ScrollView showsVerticalScrollIndicator={false}>
+                {/* Success Message Banner */}
+                <View style={styles.successBanner}>
+                    <SafeAreaView>
+                        <Animated.View style={[styles.successContent, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
+                            <View style={styles.iconCircle}>
+                                <Ionicons name="checkmark" size={60} color={Colors.light.primary} />
+                            </View>
+                            <Text style={styles.successTitle}>Payment Successful!</Text>
+                            <Text style={styles.successSubtitle}>Thank you for your purchase.</Text>
+                            <Text style={styles.successSubtitle}>Your order is getting ready.</Text>
 
-            <ScrollView>
-                {/* Success Message */}
-                <View style={styles.successMessage}>
-                    <Text style={styles.successText}>Payment successful</Text>
+                            <TouchableOpacity style={styles.homeBtn} onPress={handleBackToHome}>
+                                <Text style={styles.homeBtnText}>Continue Shopping</Text>
+                            </TouchableOpacity>
+                        </Animated.View>
+                    </SafeAreaView>
                 </View>
 
                 {/* Similar Products */}
-                <View style={styles.similarProducts}>
-                    <Text style={styles.sectionTitle}>Similar products</Text>
-                    {/* Grid product list */}
-                    <View style={{
-                        flexDirection: 'row',
-                        flexWrap: 'wrap',
-                        justifyContent: 'space-between',
-                        paddingHorizontal: 12,
-                        backgroundColor: '#F4F4F4',
-                        borderTopLeftRadius: 20,
-                        borderTopRightRadius: 20,
-                        paddingTop: 20,
-                    }}>
-                        {loading ? (
-                            <Text>Loading...</Text>
-                            ) : (
-                            products.map((product) => (
+                <View style={styles.similarSection}>
+                    <Text style={styles.sectionTitle}>You might also like</Text>
+                    {loading ? (
+                        <View style={{ padding: 20 }}>
+                            <ActivityIndicator size="small" color={Colors.light.primary} />
+                        </View>
+                    ) : (
+                        <View style={styles.grid}>
+                            {products.map((product) => (
                                 <ProductCard
-                                key={product.eggId}
-                                id={product.eggId}
-                                sold={product.soldCount} 
-                                title={product.name}
-                                oldPrice={product.price * 2} 
-                                newPrice={product.price}
-                                image={product.imageURL}
+                                    key={product.eggId}
+                                    id={product.eggId}
+                                    image={product.imageURL}
+                                    title={product.name}
+                                    oldPrice={product.price * 1.5}
+                                    newPrice={product.price}
+                                    sold={product.soldCount}
                                 />
-                            ))
-                            )}
-                    </View>
+                            ))}
+                        </View>
+                    )}
                 </View>
             </ScrollView>
-
         </View>
     );
 }
@@ -90,89 +99,72 @@ export default function PaymentSuccessfulScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F4F4F4',
+        backgroundColor: '#F9F9F9',
     },
-    backButton: {
-        position: 'absolute', top: 20, left: 20, backgroundColor: '#fff', borderRadius: 20, padding: 6,
-    },
-    heartIcons: {
-        position: 'absolute', top: 20, right: 20, flexDirection: 'row', gap: 10,
-    },
-    heartIcon: {
-        backgroundColor: '#006D5B', borderRadius: 20, padding: 8, position: 'relative',
-    },
-    badge: {
-        position: 'absolute',
-        top: -5,
-        right: -5,
-        backgroundColor: 'red',
-        borderRadius: 10,
-        paddingHorizontal: 5,
-    },
-    badgeText: {
-        color: '#fff',
-        fontSize: 9,
-    },
-    successMessage: {
-        backgroundColor: '#006D5B',
-        color: '#fff',
-        height: 320,
+    successBanner: {
+        backgroundColor: Colors.light.primary,
+        paddingBottom: 40,
+        borderBottomLeftRadius: 32,
+        borderBottomRightRadius: 32,
         alignItems: 'center',
-        justifyContent: 'center',
+        paddingTop: 60, // approximate status bar
     },
-    successText: {
-        fontSize: 24,
+    successContent: {
+        alignItems: 'center',
+        paddingHorizontal: 20,
+    },
+    iconCircle: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        backgroundColor: '#fff',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 20,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+        elevation: 5,
+    },
+    successTitle: {
+        fontSize: 28,
         fontWeight: 'bold',
         color: '#fff',
+        marginBottom: 8,
     },
-    similarProducts: {
-        flex: 1,
-        paddingHorizontal: 16,
-        backgroundColor: '#fff',
+    successSubtitle: {
+        fontSize: 16,
+        color: 'rgba(255, 255, 255, 0.9)',
+        marginBottom: 4,
+    },
+    homeBtn: {
+        marginTop: 30,
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+        paddingVertical: 12,
+        paddingHorizontal: 32,
+        borderRadius: 24,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.5)',
+    },
+    homeBtnText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 16,
+    },
+    similarSection: {
+        padding: 16,
     },
     sectionTitle: {
-        fontSize: 18,
+        fontSize: 20,
         fontWeight: 'bold',
-        marginBottom: 10,
-        marginTop: 20,
+        color: Colors.light.text.primary,
+        marginBottom: 16,
+        marginLeft: 4,
     },
-    productList: {
-        paddingBottom: 20,
-    },
-    productRow: {
+    grid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
         justifyContent: 'space-between',
-    },
-    productCard: {
-        backgroundColor: '#fff',
-        borderRadius: 8,
-        padding: 10,
-        marginBottom: 10,
-        width: '48%',
-    },
-    productImage: {
-        width: '100%',
-        height: 100,
-        borderRadius: 8,
-    },
-    productName: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        marginTop: 8,
-        color: '#333',
-    },
-    productPrice: {
-        color: '#C22727',
-        fontWeight: 'bold',
-        marginTop: 4,
-    },
-    productOldPrice: {
-        color: '#999',
-        textDecorationLine: 'line-through',
-        fontSize: 12,
-    },
-    productSold: {
-        color: '#666',
-        fontSize: 12,
-        marginTop: 4,
     },
 });

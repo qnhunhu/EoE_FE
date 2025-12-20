@@ -1,5 +1,7 @@
+
 import globalStyles from '@/assets/styles/GlobalStyle';
 import ProductCard from '@/components/ProductCard';
+import { Colors } from '@/constants/Colors';
 import { useAuth } from '@/contexts/AuthContent';
 import useAddToCart from '@/hooks/useAddToCart';
 import useEggProducts from '@/hooks/useEggProducts';
@@ -8,37 +10,49 @@ import useStore from '@/hooks/useStore';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Image, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+    ActivityIndicator,
+    Image,
+    Modal,
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
+} from 'react-native';
+
 export default function ProductDetailScreen() {
     const { id } = useLocalSearchParams();
     const { product, loading } = useProductDetail(Number(id));
     const { products: similarProducts, loading: similarProductsLoading } = useEggProducts();
     const navigation = useNavigation();
+    const router = useRouter();
+    const { userId } = useAuth();
+    const { addToCart } = useAddToCart();
+
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [quantity, setQuantity] = useState(1);
     const [isBuyNow, setIsBuyNow] = useState(false);
-    const { store: storeData, loading: storeLoading } = useStore(product?.storeId || 2);
-    const {userId}=useAuth();
-    const Router = useRouter();
-    const { addToCart, error, success } = useAddToCart();
 
-    const handleChangeToShoppingCart = () => {
-        Router.push('/ShoppingCart');
-    }
+    // Store data (mock or real)
+    const { store: storeData } = useStore(product?.storeId || 2);
 
     const handleAddToCart = () => {
         addToCart({
-            eggId: Number(id)||1,   
+            eggId: Number(id) || 1,
             quantity: quantity,
-            buyerId: userId||3 , 
+            buyerId: userId || 1,
         });
         setIsModalVisible(false);
+        alert('Added to cart!'); // Simple feedback
     }
 
     const handleBuyNow = () => {
         setIsModalVisible(false);
-        Router.push({
+        router.push({
             pathname: '/TransactionInformationScreen',
             params: {
                 selectedItems: JSON.stringify([product]),
@@ -47,158 +61,187 @@ export default function ProductDetailScreen() {
         });
     }
 
-    if (!product) {
-        return <Text>Product not found</Text>;
+    const formatPrice = (price: number) => {
+        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+    };
+
+    if (loading || !product) {
+        return (
+            <View style={[globalStyles.center, { flex: 1 }]}>
+                <ActivityIndicator size="large" color={Colors.light.primary} />
+            </View>
+        );
     }
 
     return (
-        <View style={{ flex: 1 }}>
-            <SafeAreaView style={{
-                backgroundColor: '#fff',
-                paddingHorizontal: 16,
-                paddingBottom: 8,
-                zIndex: 10,
-            }}>
-                <TouchableOpacity
-                    onPress={() => navigation.goBack()}
-                    style={styles.backButton}
-                >
-                    <Ionicons name="caret-back-outline" size={24} color="#006D5B" />
+        <View style={styles.container}>
+            <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+
+            {/* Header */}
+            <SafeAreaView style={styles.header}>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconBtn}>
+                    <Ionicons name="arrow-back" size={24} color={Colors.light.text.primary} />
                 </TouchableOpacity>
-                <View style={styles.heartIcons}>
-                    <TouchableOpacity style={styles.heartIcon} onPress={() => handleChangeToShoppingCart()}>
-                        <Ionicons name="heart" size={20} color="white" />
-                        <View style={styles.badge}><Text style={styles.badgeText}>12</Text></View>
+                <View style={styles.headerRight}>
+                    <TouchableOpacity style={styles.iconBtn} onPress={() => router.push('/ShoppingCart')}>
+                        <Ionicons name="cart-outline" size={24} color={Colors.light.text.primary} />
+                        {/* Badge could go here */}
                     </TouchableOpacity>
-                    <View style={styles.heartIcon}>
-                        <Ionicons name="chatbubble" size={20} color="white" />
-                        <View style={styles.badge}><Text style={styles.badgeText}>12</Text></View>
-                    </View>
                 </View>
             </SafeAreaView>
-            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 100 }}>
-                {/* Top image */}
-                <View style={{ position: 'relative' }}>
-                    <Image
 
-                        // source={require('../../assets/images/logoNormal.png')}
+            <ScrollView contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
+                {/* Product Image */}
+                <Image
+                    source={{ uri: product.imageURL }}
+                    style={styles.productImage}
+                    resizeMode="cover"
+                />
 
-                        source={{ uri: product.imageURL }}
-                        style={{ width: '100%', height: 300, borderBottomLeftRadius: 30, borderBottomRightRadius: 30 }}
-                    />
+                <View style={styles.contentContainer}>
+                    {/* Price & Title */}
+                    <Text style={styles.productTitle}>{product.name}</Text>
 
-                </View>
-
-                {/* Product info */}
-                <View style={{ padding: 16 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Text style={{ color: '#C22727', fontWeight: 'bold', fontSize: 22 }}>${product.price}</Text>
-                        <Text style={{ marginLeft: 10, color: '#999', textDecorationLine: 'line-through' }}>${product.price * 22}</Text>
-                        <Text style={{ marginLeft: 'auto', color: '#666' }}>Sold {product.soldCount}</Text>
+                    <View style={styles.priceRow}>
+                        <Text style={styles.currentPrice}>{formatPrice(product.price)}</Text>
+                        <View style={styles.discountTag}>
+                            <Text style={styles.discountText}>-50%</Text>
+                        </View>
+                        <Text style={styles.soldCount}>Sold {product.soldCount}</Text>
                     </View>
-                    <Text style={StyleSheet.flatten([{ marginTop: 8, fontSize: 18 }, globalStyles.p1Medium])}>{product.name}</Text>
-                    <Divider />
-                    {/* Delivery & Return */}
-                    <View style={styles.infoRow}>
-                        <MaterialCommunityIcons name="truck-delivery-outline" size={24} color="#006D5B" />
-                        <Text style={styles.infoText}>Receive from 16:00 tomorrow{"\n"}Free shipping</Text>
-                    </View>
-                    <Divider />
-                    <View style={styles.infoRow}>
-                        <MaterialCommunityIcons name="shield-check-outline" size={24} color="#006D5B" />
-                        <Text style={styles.infoText}>Return after receipt - 100% genuine</Text>
-                    </View>
-                    {/* Shop info */}
-                    <View style={styles.shopCard}>
-                        <Image
-                            source={require('../../assets/images/logoNormal.png')}
-                            style={styles.shopAvatar}
-                        />
-                        <View style={{ flex: 1, marginLeft: 12 }}>
-                            <Text style={{ fontWeight: 'bold' }}>{storeData?.storeName}</Text>
-                            <Text style={{ color: '#666' }}>{storeData?.eggCount} products</Text>
+
+                    {/* Store Info */}
+                    <View style={styles.storeContainer}>
+                        <View style={styles.storeAvatar}>
+                            <Ionicons name="storefront" size={20} color="#fff" />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                            <Text style={styles.storeName}>{storeData?.storeName || 'Egg Store'}</Text>
+                            <Text style={styles.storeSub}>{storeData?.eggCount || 10} products</Text>
                         </View>
                         <TouchableOpacity style={styles.visitBtn}>
-                            <Text style={{ color: '#006D5B', fontWeight: 'bold' }}>Visit</Text>
+                            <Text style={styles.visitText}>Visit Store</Text>
                         </TouchableOpacity>
                     </View>
 
+                    {/* Features */}
+                    <View style={styles.featuresRow}>
+                        <View style={styles.featureItem}>
+                            <MaterialCommunityIcons name="truck-fast-outline" size={24} color={Colors.light.primary} />
+                            <Text style={styles.featureText}>Fast Delivery</Text>
+                        </View>
+                        <View style={styles.featureItem}>
+                            <MaterialCommunityIcons name="shield-check-outline" size={24} color={Colors.light.primary} />
+                            <Text style={styles.featureText}>Genuine</Text>
+                        </View>
+                        <View style={styles.featureItem}>
+                            <MaterialCommunityIcons name="refresh" size={24} color={Colors.light.primary} />
+                            <Text style={styles.featureText}>7 Day Return</Text>
+                        </View>
+                    </View>
+
                     {/* Description */}
-                    <Text style={{ fontWeight: 'bold', fontSize: 16, marginTop: 12 }}>Product description</Text>
-                    <Text style={{ marginTop: 4, color: '#333' }}>
-                        {product.description || 'No description available for this product.'}
+                    <Text style={styles.sectionTitle}>Description</Text>
+                    <Text style={styles.descriptionText}>
+                        {product.description || 'Fresh eggs from our farm to your table. Guaranteed quality and freshness.'}
                     </Text>
 
-                    {/* Similar products (placeholder) */}
-                    <Text style={{ fontWeight: 'bold', fontSize: 16, marginTop: 16 }}>Similar products</Text>
+                    {/* Reviews (Placeholder) */}
+                    <View style={[styles.row, { justifyContent: 'space-between', marginTop: 20 }]}>
+                        <Text style={styles.sectionTitle}>Reviews (12)</Text>
+                        <TouchableOpacity>
+                            <Text style={{ color: Colors.light.primary }}>See All</Text>
+                        </TouchableOpacity>
+                    </View>
 
-                </View>
-                <View style={{
-                    flexDirection: 'row',
-                    flexWrap: 'wrap',
-                    justifyContent: 'space-between',
-                    paddingHorizontal: 12,
-                    backgroundColor: '#F4F4F4',
-                    borderTopLeftRadius: 20,
-                    borderTopRightRadius: 20,
-                    paddingTop: 15,
-                    marginTop: 10,
-                }}>
-                    {similarProductsLoading ? (
-                        <Text>Loading...</Text>) :
-                        (similarProducts.map((product) => (
+                    {/* Similar Products */}
+                    <Text style={[styles.sectionTitle, { marginTop: 20 }]}>You might also like</Text>
+                    <View style={styles.similarGrid}>
+                        {similarProducts.slice(0, 2).map((p) => (
                             <ProductCard
-                                key={product.eggId}
-                                id={product.eggId}
-                                sold={product.soldCount}
-                                title={product.name}
-                                oldPrice={product.price * 2}
-                                newPrice={product.price}
-                                image={product.imageURL}
+                                key={p.eggId}
+                                id={p.eggId}
+                                sold={p.soldCount}
+                                title={p.name}
+                                oldPrice={p.price * 1.5}
+                                newPrice={p.price}
+                                image={p.imageURL}
                             />
-                        ))
-                        )}
+                        ))}
+                    </View>
                 </View>
             </ScrollView>
 
-            {/* Bottom Bar */}
+            {/* Bottom Actions */}
             <View style={styles.bottomBar}>
-                <TouchableOpacity style={styles.circleBtn}>
-                    <Ionicons name="chatbubble-ellipses-outline" size={24} color="#006D5B" />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.circleBtn} onPress={() => setIsModalVisible(true)}>
-                    <Ionicons name="cart-outline" size={24} color="#006D5B" />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.buyNowBtn} onPress={() => { setIsModalVisible(true); setIsBuyNow(true) }}>
-                    <Text style={styles.buyNowText}>Buy now{'\n'}<Text style={{ fontSize: 14 }}>$0.89</Text></Text>
-                </TouchableOpacity>
+                <View style={styles.bottomLeft}>
+                    <TouchableOpacity style={styles.chatBtn}>
+                        <Ionicons name="chatbubble-ellipses-outline" size={24} color={Colors.light.primary} />
+                        <Text style={styles.chatText}>Chat</Text>
+                    </TouchableOpacity>
+                </View>
+
+                <View style={styles.bottomRight}>
+                    <TouchableOpacity
+                        style={[styles.actionBtn, styles.cartBtn]}
+                        onPress={() => { setIsBuyNow(false); setIsModalVisible(true); }}
+                    >
+                        <Text style={[styles.actionBtnText, { color: Colors.light.primary }]}>Add to Cart</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[styles.actionBtn, styles.buyBtn]}
+                        onPress={() => { setIsBuyNow(true); setIsModalVisible(true); }}
+                    >
+                        <Text style={[styles.actionBtnText, { color: '#fff' }]}>Buy Now</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
 
-            {/* Modal for Quantity Selection */}
-            <Modal visible={isModalVisible} transparent animationType="slide">
+            {/* Quantity Modal */}
+            <Modal visible={isModalVisible} transparent animationType="fade">
                 <View style={styles.modalOverlay}>
+                    <TouchableOpacity
+                        style={StyleSheet.absoluteFill}
+                        onPress={() => setIsModalVisible(false)}
+                    />
                     <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Select Quantity</Text>
-                        <TextInput
-                            style={styles.input}
-                            keyboardType="numeric"
-                            value={quantity.toString()}
-                            onChangeText={(text) => setQuantity(Number(text))}
-                        />
-                        <View style={styles.modalButtons}>
-                            <TouchableOpacity
-                                style={[styles.modalButton, { backgroundColor: '#ddd' }]}
-                                onPress={() => setIsModalVisible(false)}
-                            >
-                                <Text style={styles.modalButtonText}>Cancel</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.modalButton, { backgroundColor: '#006D5B' }]}
-                                onPress={isBuyNow ? handleBuyNow : handleAddToCart}
-                            >
-                                <Text style={[styles.modalButtonText, { color: '#fff' }]}>Add to Cart</Text>
+                        <View style={styles.modalHeader}>
+                            <Image source={{ uri: product.imageURL }} style={styles.modalImage} />
+                            <View style={{ marginLeft: 12, flex: 1 }}>
+                                <Text style={styles.modalPrice}>{formatPrice(product.price)}</Text>
+                                <Text style={styles.modalStock}>Stock: {product.stockQuantity}</Text>
+                            </View>
+                            <TouchableOpacity onPress={() => setIsModalVisible(false)}>
+                                <Ionicons name="close" size={24} color={Colors.light.text.secondary} />
                             </TouchableOpacity>
                         </View>
+
+                        <Text style={styles.quantityLabel}>Quantity</Text>
+                        <View style={styles.quantityControl}>
+                            <TouchableOpacity
+                                onPress={() => setQuantity(Math.max(1, quantity - 1))}
+                                style={styles.qtyBtn}
+                            >
+                                <Ionicons name="remove" size={20} color={Colors.light.text.primary} />
+                            </TouchableOpacity>
+                            <Text style={styles.qtyText}>{quantity}</Text>
+                            <TouchableOpacity
+                                onPress={() => setQuantity(quantity + 1)}
+                                style={styles.qtyBtn}
+                            >
+                                <Ionicons name="add" size={20} color={Colors.light.text.primary} />
+                            </TouchableOpacity>
+                        </View>
+
+                        <TouchableOpacity
+                            style={[globalStyles.btnPrimary, { marginTop: 20 }]}
+                            onPress={isBuyNow ? handleBuyNow : handleAddToCart}
+                        >
+                            <Text style={globalStyles.btnPrimaryText}>
+                                {isBuyNow ? 'Buy Now' : 'Add to Cart'} - {formatPrice(product.price * quantity)}
+                            </Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
             </Modal>
@@ -207,101 +250,254 @@ export default function ProductDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-    backButton: {
-        position: 'absolute', top: 20, left: 20, backgroundColor: '#fff', borderRadius: 20, padding: 6,
-    },
-    heartIcons: {
-        position: 'absolute', top: 20, right: 20, flexDirection: 'row', gap: 10,
-    },
-    heartIcon: {
-        backgroundColor: '#006D5B', borderRadius: 20, padding: 8, position: 'relative',
-    },
-    badge: {
-        position: 'absolute', right: -5, backgroundColor: 'red', borderRadius: 10, paddingHorizontal: 5,
-    },
-    badgeText: { color: 'white', fontSize: 9 },
-    infoRow: {
-        flexDirection: 'row', alignItems: 'center', marginVertical: 5
-    },
-    infoText: {
-        marginLeft: 10, color: '#333', lineHeight: 20,
-    },
-    shopCard: {
-        flexDirection: 'row', alignItems: 'center', marginTop: 20, padding: 12,
-        backgroundColor: '#F8F8F8', borderRadius: 12,
-    },
-    shopAvatar: { width: 48, height: 48, borderRadius: 24 },
-    visitBtn: {
-        borderWidth: 1, borderColor: '#006D5B', borderRadius: 8,
-        paddingVertical: 4, paddingHorizontal: 12,
-    },
-    bottomBar: {
-        position: 'absolute', bottom: 0, left: 0, right: 0,
-        backgroundColor: 'white', flexDirection: 'row', alignItems: 'center',
-        paddingHorizontal: 12, paddingVertical: 12, borderTopWidth: 1, borderColor: '#ddd',
-    },
-    circleBtn: {
-        width: 42, height: 42, borderRadius: 21, borderWidth: 1,
-        borderColor: '#006D5B', justifyContent: 'center', alignItems: 'center', marginRight: 12,
-    },
-    buyNowBtn: {
-        flex: 1, backgroundColor: '#C22727', borderRadius: 16, paddingVertical: 10,
-        justifyContent: 'center', alignItems: 'center',
-    },
-    buyNowText: {
-        color: 'white', fontWeight: 'bold', fontSize: 16, textAlign: 'center',
-    },
-    modalOverlay: {
+    container: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: '#fff',
+    },
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        backgroundColor: '#fff',
+        zIndex: 10,
+    },
+    iconBtn: {
+        padding: 8,
+    },
+    headerRight: {
+        flexDirection: 'row',
+    },
+    productImage: {
+        width: '100%',
+        height: 300,
+        backgroundColor: '#f5f5f5',
+    },
+    contentContainer: {
+        padding: 16,
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        marginTop: -24,
+        backgroundColor: '#fff',
+    },
+    productTitle: {
+        fontSize: 20,
+        fontWeight: '700',
+        color: Colors.light.text.primary,
+        marginBottom: 8,
+    },
+    priceRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    currentPrice: {
+        fontSize: 24,
+        fontWeight: '700',
+        color: Colors.light.primary,
+        marginRight: 10,
+    },
+    discountTag: {
+        backgroundColor: Colors.light.error,
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 4,
+        marginRight: 'auto',
+    },
+    discountText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: 'bold',
+    },
+    soldCount: {
+        color: Colors.light.text.secondary,
+        fontSize: 14,
+    },
+    storeContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 12,
+        backgroundColor: '#F8F9FA',
+        borderRadius: 12,
+        marginBottom: 24,
+    },
+    storeAvatar: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: Colors.light.primary,
         justifyContent: 'center',
         alignItems: 'center',
+        marginRight: 12,
+    },
+    storeName: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: Colors.light.text.primary,
+    },
+    storeSub: {
+        fontSize: 12,
+        color: Colors.light.text.secondary,
+    },
+    visitBtn: {
+        borderWidth: 1,
+        borderColor: Colors.light.primary,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 20,
+    },
+    visitText: {
+        color: Colors.light.primary,
+        fontSize: 12,
+        fontWeight: '600',
+    },
+    featuresRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 24,
+        paddingVertical: 12,
+        borderTopWidth: 1,
+        borderBottomWidth: 1,
+        borderColor: Colors.light.border,
+    },
+    featureItem: {
+        alignItems: 'center',
+        flex: 1,
+    },
+    featureText: {
+        fontSize: 12,
+        marginTop: 4,
+        color: Colors.light.text.secondary,
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: Colors.light.text.primary,
+        marginBottom: 8,
+    },
+    descriptionText: {
+        fontSize: 15,
+        color: Colors.light.text.secondary,
+        lineHeight: 24,
+    },
+    row: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    similarGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+        marginTop: 12,
+    },
+    bottomBar: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: '#fff',
+        flexDirection: 'row',
+        paddingHorizontal: 16,
+        paddingTop: 12,
+        paddingBottom: Platform.OS === 'ios' ? 30 : 12,
+        borderTopWidth: 1,
+        borderColor: Colors.light.border,
+        ...Platform.select({
+            ios: { shadowColor: '#000', shadowOffset: { width: 0, height: -2 }, shadowOpacity: 0.05, shadowRadius: 4 },
+            android: { elevation: 4 }
+        })
+    },
+    bottomLeft: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 16,
+    },
+    chatBtn: {
+        alignItems: 'center',
+    },
+    chatText: {
+        fontSize: 10,
+        color: Colors.light.text.secondary,
+    },
+    bottomRight: {
+        flex: 1,
+        flexDirection: 'row',
+        gap: 10,
+    },
+    actionBtn: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: 12,
+        borderRadius: 24,
+    },
+    cartBtn: {
+        backgroundColor: '#fff',
+        borderWidth: 1,
+        borderColor: Colors.light.primary,
+    },
+    buyBtn: {
+        backgroundColor: Colors.light.primary,
+    },
+    actionBtnText: {
+        fontSize: 14,
+        fontWeight: '700',
+    },
+
+    // Modal
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'flex-end',
     },
     modalContent: {
         backgroundColor: '#fff',
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
         padding: 20,
-        borderRadius: 10,
-        width: '80%',
-        alignItems: 'center',
+        paddingBottom: Platform.OS === 'ios' ? 40 : 20,
     },
-    modalTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
+    modalHeader: {
+        flexDirection: 'row',
         marginBottom: 20,
     },
-    input: {
-        width: '100%',
-        borderWidth: 1,
-        borderColor: '#ddd',
+    modalImage: {
+        width: 80,
+        height: 80,
         borderRadius: 8,
-        padding: 10,
-        marginBottom: 10,
-        textAlign: 'center',
+        backgroundColor: '#f0f0f0',
     },
-    modalButtons: {
+    modalPrice: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: Colors.light.primary,
+        marginBottom: 4,
+    },
+    modalStock: {
+        fontSize: 12,
+        color: Colors.light.text.secondary,
+    },
+    quantityLabel: {
+        fontSize: 14,
+        fontWeight: '600',
+        marginBottom: 12,
+    },
+    quantityControl: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        width: '100%',
-    },
-    modalButton: {
-        flex: 1,
-        padding: 10,
-        borderRadius: 8,
         alignItems: 'center',
-        marginHorizontal: 5,
+        borderWidth: 1,
+        borderColor: Colors.light.border,
+        borderRadius: 8,
+        alignSelf: 'flex-start',
     },
-    modalButtonText: {
+    qtyBtn: {
+        padding: 10,
+    },
+    qtyText: {
         fontSize: 16,
-        fontWeight: 'bold',
-    },
+        fontWeight: '600',
+        paddingHorizontal: 16,
+        minWidth: 40,
+        textAlign: 'center',
+    }
 });
-
-const Divider = ({ color = '#ccc', thickness = 1, marginVertical = 5 }) => {
-    return (
-        <View style={{
-            height: thickness,
-            backgroundColor: color,
-            marginVertical,
-        }} />
-    );
-};

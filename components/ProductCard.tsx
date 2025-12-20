@@ -1,8 +1,9 @@
+import globalStyles from '@/assets/styles/GlobalStyle';
+import { Colors } from '@/constants/Colors';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Image, Text, TouchableOpacity, View } from 'react-native';
-
-
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function ProductCard({
   id,
@@ -25,33 +26,128 @@ export default function ProductCard({
     router.push({ pathname: '/ProductDetail', params: { id } });
   };
 
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+  };
 
   return (
     <TouchableOpacity
-      style={{
-        width: '48%',
-        backgroundColor: 'white',
-        borderRadius: 12,
-        marginBottom: 16,
-        overflow: 'hidden',
-      }}
+      style={[styles.card, globalStyles.shadow]}
       onPress={handlePress}
+      activeOpacity={0.9}
     >
-      <Image
-        source={{ uri: image }}
-        style={{ width: '100%', height: 120 }}
-        defaultSource={require('../assets/images/logoNormal.png')}
-      />
-      <View style={{ padding: 8 }}>
-        <Text style={{ fontWeight: '500' }}>{title}</Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-          <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#C22727' }}>${newPrice}</Text>
-          <Text style={{ textDecorationLine: 'line-through', marginLeft: 8, color: '#999' }}>
-            ${oldPrice}
-          </Text>
-          <Text style={{ marginLeft: 'auto', color: '#666' }}>Sold {sold}</Text>
+      <View style={styles.imageContainer}>
+        <Image
+          source={{ uri: image }}
+          style={styles.image}
+          // defaultSource={require('../assets/images/logoNormal.png')} 
+          resizeMode="cover"
+        />
+        {/* Discount Badge */}
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>-50%</Text>
+        </View>
+      </View>
+
+      <View style={styles.content}>
+        <Text style={styles.title} numberOfLines={2}>{title}</Text>
+
+        <View style={styles.priceRow}>
+          <Text style={styles.price}>{formatPrice(newPrice)}</Text>
+          <Text style={styles.oldPrice}>{formatPrice(oldPrice)}</Text>
+        </View>
+
+        <View style={styles.footer}>
+          <View style={styles.soldContainer}>
+            <Ionicons name="flame" size={12} color={Colors.light.accent} />
+            <Text style={styles.soldText}>Sold {sold}</Text>
+          </View>
+          <TouchableOpacity style={styles.addBtn}>
+            <Ionicons name="add" size={20} color="#fff" />
+          </TouchableOpacity>
         </View>
       </View>
     </TouchableOpacity>
   );
 }
+
+const styles = StyleSheet.create({
+  card: {
+    width: '48%',
+    backgroundColor: Colors.light.surface,
+    borderRadius: 16,
+    marginBottom: 16,
+    overflow: 'hidden', // Required for borderRadius on Image
+  },
+  imageContainer: {
+    position: 'relative',
+  },
+  image: {
+    width: '100%',
+    height: 140,
+    backgroundColor: '#f0f0f0',
+  },
+  badge: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    backgroundColor: Colors.light.error,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  content: {
+    padding: 12,
+  },
+  title: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.light.text.primary,
+    marginBottom: 8,
+    minHeight: 40, // Ensure alignment
+  },
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    marginBottom: 8,
+    flexWrap: 'wrap'
+  },
+  price: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.light.primary,
+    marginRight: 6,
+  },
+  oldPrice: {
+    fontSize: 12,
+    textDecorationLine: 'line-through',
+    color: Colors.light.text.secondary,
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  soldContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  soldText: {
+    fontSize: 12,
+    color: Colors.light.text.secondary,
+  },
+  addBtn: {
+    backgroundColor: Colors.light.primary,
+    borderRadius: 20,
+    width: 28,
+    height: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+  }
+});

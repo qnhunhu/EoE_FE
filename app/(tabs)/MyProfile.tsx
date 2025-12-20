@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Image, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useAuth } from '../../contexts/AuthContent';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function MyProfile() {
     const [isModalVisible, setIsModalVisible] = React.useState(false);
@@ -107,7 +108,7 @@ export default function MyProfile() {
     // }
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => handleChangeAvatar()}>
@@ -203,7 +204,7 @@ export default function MyProfile() {
                     </View>
                 </View>
             </Modal>
-        </View>
+        </SafeAreaView>
     );
 }
 

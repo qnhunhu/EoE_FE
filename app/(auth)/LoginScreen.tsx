@@ -1,45 +1,48 @@
+
 import globalStyles from '@/assets/styles/GlobalStyle';
+import { Colors } from '@/constants/Colors';
 import { useAuth } from '@/contexts/AuthContent';
-import useLogin from '@/hooks/useLogin';
+import useLogin from '@/hooks/useLogin'; // Correct import path
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+    ActivityIndicator,
+    Animated,
+    Image,
+    KeyboardAvoidingView,
+    Platform,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
+} from 'react-native';
+
 export default function LoginScreen() {
     const router = useRouter();
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-
-    const { setIsLoggedIn } = useAuth();
-
-    const { setUserId, setRole } = useAuth();
-    // const handleLogin = async () => {
-    //     try {
-    //       const response = await axios.post(`${Config.API_BASE_URL}/api/Auth/login`, {
-    //        email,
-    //         password
-    //       });
-
-    //       if (response.status === 200) {
-    //         setIsLoggedIn(true);
-    //         setUserId(response.data.userId);
-    //         setRole(response.data.role);
-
-    //           if (response.data.role === 'Distributor') {
-    //             router.replace('/(distributor-tabs)/DistributorMainScreen');
-    //           }
-    //           else if (response.data.role === 'Buyer') {
-    //             router.replace('/(tabs)/HomeScreen');
-    //           }
-    //       }
-    //     } catch (error) {
-    //       console.error('Login error:', error);
-    //       alert('Invalid credentials. Please try again.');
-    //     }
-    //   };
+    const { setIsLoggedIn, setUserId, setRole } = useAuth();
     const { login, loading, error } = useLogin();
 
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+        }).start();
+    }, []);
+
     const handleLogin = async () => {
+        if (!email || !password) {
+            alert("Please enter both email and password");
+            return;
+        }
+
         const user = await login({ email, password });
         if (user) {
             setIsLoggedIn(true);
@@ -56,139 +59,136 @@ export default function LoginScreen() {
         }
     };
 
-
     return (
-        <View style={styles.container}>
+        <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={globalStyles.container}
+        >
             <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-                <Ionicons name="caret-back" size={32} color="#A86A5A" />
+                <Ionicons name="arrow-back" size={28} color={Colors.light.primary} />
             </TouchableOpacity>
-            <View style={styles.logoRow}>
-                <Image source={require('../../assets/images/logo.png')} style={styles.logo} />
 
-            </View>
-            <Text style={[styles.title, globalStyles.h2]}>LOGIN</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Email"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Password"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-            />
-            <TouchableOpacity onPress={() => { }}>
-                <Text style={[styles.forgot, globalStyles.p2Regular]}>Forgot password?</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-                style={styles.loginBtn}
-                onPress={() => handleLogin()}>
-                <Text style={[styles.loginText, globalStyles.h4]}>Login</Text>
-            </TouchableOpacity>
-            <View style={styles.bottomRow}>
-                <Text style={[styles.bottomText, globalStyles.p2Regular]}>Don’t have a account? </Text>
-                <TouchableOpacity onPress={() => router.push('/SignUpScreen')}>
-                    <Text style={[globalStyles.p2Regular, styles.signupText,]}>Sign up</Text>
+            <Animated.ScrollView
+                contentContainerStyle={[propsGlobal.scrollContent, { opacity: fadeAnim }]}
+                showsVerticalScrollIndicator={false}
+            >
+                <View style={[globalStyles.center, { marginTop: 60, marginBottom: 40 }]}>
+                    <Image
+                        source={require('../../assets/images/logo.png')}
+                        style={styles.logo}
+                        resizeMode="contain"
+                    />
+                    <Text style={[globalStyles.h1, { marginTop: 16 }]}>Welcome Back</Text>
+                    <Text style={globalStyles.body2}>Sign in to continue</Text>
+                </View>
+
+                {/* Email Input */}
+                <View style={globalStyles.inputContainer}>
+                    <Text style={globalStyles.label}>Email</Text>
+                    <View style={styles.inputWrapper}>
+                        <Ionicons name="mail-outline" size={20} color={Colors.light.text.secondary} style={styles.inputIcon} />
+                        <TextInput
+                            style={styles.inputField}
+                            placeholder="user@example.com"
+                            placeholderTextColor={Colors.light.text.secondary}
+                            value={email}
+                            onChangeText={setEmail}
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                        />
+                    </View>
+                </View>
+
+                {/* Password Input */}
+                <View style={globalStyles.inputContainer}>
+                    <Text style={globalStyles.label}>Password</Text>
+                    <View style={styles.inputWrapper}>
+                        <Ionicons name="lock-closed-outline" size={20} color={Colors.light.text.secondary} style={styles.inputIcon} />
+                        <TextInput
+                            style={styles.inputField}
+                            placeholder="Enter your password"
+                            placeholderTextColor={Colors.light.text.secondary}
+                            value={password}
+                            onChangeText={setPassword}
+                            secureTextEntry={!showPassword}
+                        />
+                        <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+                            <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color={Colors.light.text.secondary} />
+                        </TouchableOpacity>
+                    </View>
+                </View>
+
+                <TouchableOpacity style={{ alignSelf: 'flex-end', marginBottom: 30 }}>
+                    <Text style={{ color: Colors.light.primary, fontWeight: '600' }}>Forgot Password?</Text>
                 </TouchableOpacity>
-            </View>
-        </View>
+
+                <TouchableOpacity
+                    style={[globalStyles.btnPrimary, loading && { opacity: 0.7 }]}
+                    onPress={handleLogin}
+                    disabled={loading}
+                >
+                    {loading ? (
+                        <ActivityIndicator color="#fff" />
+                    ) : (
+                        <Text style={globalStyles.btnPrimaryText}>Login</Text>
+                    )}
+                </TouchableOpacity>
+
+                <View style={[globalStyles.row, globalStyles.center, { marginTop: 30 }]}>
+                    <Text style={globalStyles.body2}>Don't have an account? </Text>
+                    <TouchableOpacity onPress={() => router.push('/SignUpScreen')}>
+                        <Text style={{ color: Colors.light.primary, fontWeight: '700' }}>Sign Up</Text>
+                    </TouchableOpacity>
+                </View>
+            </Animated.ScrollView>
+        </KeyboardAvoidingView>
     );
 }
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#fff',
-        alignItems: 'center',
-        paddingTop: 40
-    },
 
+const propsGlobal = StyleSheet.create({
+    scrollContent: {
+        flexGrow: 1,
+        justifyContent: 'center',
+    }
+})
+
+const styles = StyleSheet.create({
     backBtn: {
         position: 'absolute',
-        left: 24,
-        top: 48,
-        zIndex: 2
+        top: 50,
+        left: 20,
+        zIndex: 10,
+        backgroundColor: Colors.light.surface,
+        padding: 8,
+        borderRadius: 20,
+        ...Platform.select({
+            ios: { shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 4 },
+            android: { elevation: 2 }
+        })
     },
-
-    logoRow: {
+    logo: {
+        width: 150,
+        height: 100,
+    },
+    inputWrapper: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginTop: 40
-    },
-
-    logo: {
-        width: 200,
-        height: 80,
-    },
-
-    logoText: {
-        fontSize: 36,
-        fontWeight: 'bold',
-        color: '#A86A5A'
-    },
-
-    title: {
-        fontSize: 40,
-        fontWeight: 'bold',
-        color: '#A86A5A',
-        marginTop: 40,
-        marginBottom: 30
-    },
-
-    input: {
-        width: '85%',
+        backgroundColor: Colors.light.surface,
+        borderRadius: 12,
         borderWidth: 1,
-        borderColor: '#bbb',
-        borderRadius: 20,
-        padding: 16,
-        fontSize: 12,
-        marginBottom: 18,
-        backgroundColor: '#fff',
-        shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 4, elevation: 2,
+        borderColor: Colors.light.border,
+        paddingHorizontal: 12,
     },
-    forgot: {
-        color: '#0B5C60',
-        fontStyle: 'italic',
-        alignSelf: 'center',
-        marginBottom: 30,
-        fontSize: 18
+    inputIcon: {
+        marginRight: 10,
     },
-    loginBtn: {
-        backgroundColor: '#BC7269',
-        borderRadius: 28,
+    inputField: {
+        flex: 1,
         paddingVertical: 14,
-        paddingHorizontal: 60,
-        alignSelf: 'center',
-        marginTop: 10,
-        marginBottom: 30,
-        shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 4, elevation: 2,
+        fontSize: 16,
+        color: Colors.light.text.primary,
     },
-    loginText: {
-        color: '#fff',
-        fontWeight: 'bold',
-        fontSize: 28
-    },
-
-    bottomRow: {
-        flexDirection: 'row',
-        position: 'absolute',
-        bottom: 40,
-        alignSelf: 'center'
-    },
-
-    bottomText: {
-        color: '#222',
-        fontSize: 18
-    },
-
-    signupText: {
-        color: '#0B5C60',
-        fontWeight: 'bold',
-    },
+    eyeIcon: {
+        padding: 4,
+    }
 });
-
-
-

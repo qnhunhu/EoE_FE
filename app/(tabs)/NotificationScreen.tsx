@@ -1,5 +1,6 @@
 import React from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const notifications = [
     {
@@ -27,7 +28,7 @@ const notifications = [
 
 export default function NotificationScreen() {
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             <Text style={styles.header}>Notifications</Text>
             <FlatList
                 data={notifications}
@@ -41,7 +42,7 @@ export default function NotificationScreen() {
                 )}
                 contentContainerStyle={{ paddingBottom: 24 }}
             />
-        </View>
+        </SafeAreaView>
     );
 }
 

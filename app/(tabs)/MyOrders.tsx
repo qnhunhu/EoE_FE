@@ -1,15 +1,16 @@
 import OrderCard from '@/components/OrderCard';
+import { Colors } from '@/constants/Colors';
 import { useAuth } from '@/contexts/AuthContent';
 import useOrdersByBuyer from '@/hooks/useOrderByBuyer';
 import { Order, OrderStatus } from '@/types/Order';
 import { useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function MyOrders() {
-  const { userId, role } = useAuth(); 
-  const { orders } = useOrdersByBuyer(userId || 3); 
- 
+  const { userId, role } = useAuth();
+  const { orders } = useOrdersByBuyer(userId || 3);
+
   const router = useRouter();
   const groupedOrders = orders.reduce(
     (acc: Record<OrderStatus, Order[]>, order) => {
@@ -23,43 +24,53 @@ export default function MyOrders() {
   );
 
   return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
-        {Object.keys(groupedOrders).map((status) => (
-          <View key={status} style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{status}</Text>
-              <TouchableOpacity onPress={() => router.push({
-                pathname: `/OrdersByStatusScreen`,
-                params: { status, orders: JSON.stringify(groupedOrders[status as OrderStatus]) },
-              })}>
-                <Text style={styles.seeMore}>See more</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 20,
-            }}>
-              {groupedOrders[status as OrderStatus].map((order, index) => (
-                <TouchableOpacity
-                  key={index}
-                  onPress={() => router.push({
-                    pathname: `/OrderDetailsScreen`,
-                    params: { order: JSON.stringify(order) },
-                  })}>
-                 <OrderCard
-                   order={{ ...order, orderDetails: order.orderDetails.slice(0, 2) }}
-                   role={role || 'Buyer'}
-                  />
-                </TouchableOpacity>
-              ))}
-            </View>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>My Orders</Text>
+      </View>
 
+      <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
+        {Object.keys(groupedOrders).length === 0 ? (
+          <View style={{ padding: 20, alignItems: 'center' }}>
+            <Text>No orders found.</Text>
           </View>
-        ))}
+        ) : (
+          Object.keys(groupedOrders).map((status) => (
+            <View key={status} style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>{status}</Text>
+                <TouchableOpacity onPress={() => router.push({
+                  pathname: `/OrdersByStatusScreen`,
+                  params: { status, orders: JSON.stringify(groupedOrders[status as OrderStatus]) },
+                })}>
+                  <Text style={styles.seeMore}>See more</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 20,
+              }}>
+                {groupedOrders[status as OrderStatus].map((order, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    onPress={() => router.push({
+                      pathname: `/OrderDetailsScreen`,
+                      params: { order: JSON.stringify(order) },
+                    })}>
+                    <OrderCard
+                      order={{ ...order, orderDetails: order.orderDetails.slice(0, 2) }}
+                      role={role || 'Buyer'}
+                    />
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+            </View>
+          ))
+        )}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -67,6 +78,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F4F4F4',
+  },
+  header: {
+    backgroundColor: '#fff',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: Colors.light.primary,
   },
   section: {
     backgroundColor: '#fff',

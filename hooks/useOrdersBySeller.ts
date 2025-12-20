@@ -1,6 +1,4 @@
-import axios from 'axios';
 import { useCallback, useEffect, useState } from 'react';
-import Config from '../constants';
 import { Order } from '../types/Order';
 
 export default function useOrdersBySeller(sellerId: number) {
@@ -11,9 +9,14 @@ export default function useOrdersBySeller(sellerId: number) {
   const fetchOrders = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${Config.API_BASE_URL}/api/Order/seller-history/${sellerId}`);
-      setOrders(res.data);
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setOrders(require('../constants/MockData').MOCK_ORDERS);
       setError(null);
+
+      //   const res = await axios.get(`${Config.API_BASE_URL}/api/Order/seller-history/${sellerId}`);
+      //   setOrders(res.data);
+      //   setError(null);
     } catch (err) {
       setError(err);
     } finally {

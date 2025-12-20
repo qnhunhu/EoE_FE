@@ -1,44 +1,62 @@
 import globalStyles from '@/assets/styles/GlobalStyle';
-import Config from '@/constants';
 import { useAuth } from '@/contexts/AuthContent';
+import useLogin from '@/hooks/useLogin';
 import { Ionicons } from '@expo/vector-icons';
-import axios from 'axios';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 export default function LoginScreen() {
     const router = useRouter();
-    const [email,setEmail] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
     const { setIsLoggedIn } = useAuth();
 
     const { setUserId, setRole } = useAuth();
+    // const handleLogin = async () => {
+    //     try {
+    //       const response = await axios.post(`${Config.API_BASE_URL}/api/Auth/login`, {
+    //        email,
+    //         password
+    //       });
+
+    //       if (response.status === 200) {
+    //         setIsLoggedIn(true);
+    //         setUserId(response.data.userId);
+    //         setRole(response.data.role);
+
+    //           if (response.data.role === 'Distributor') {
+    //             router.replace('/(distributor-tabs)/DistributorMainScreen');
+    //           }
+    //           else if (response.data.role === 'Buyer') {
+    //             router.replace('/(tabs)/HomeScreen');
+    //           }
+    //       }
+    //     } catch (error) {
+    //       console.error('Login error:', error);
+    //       alert('Invalid credentials. Please try again.');
+    //     }
+    //   };
+    const { login, loading, error } = useLogin();
+
     const handleLogin = async () => {
-        try {
-          const response = await axios.post(`${Config.API_BASE_URL}/api/Auth/login`, {
-           email,
-            password
-          });
-      
-          if (response.status === 200) {
+        const user = await login({ email, password });
+        if (user) {
             setIsLoggedIn(true);
-            setUserId(response.data.userId);
-            setRole(response.data.role);
-            
-              if (response.data.role === 'Distributor') {
+            setUserId(user.userId);
+            setRole(user.role);
+
+            if (user.role === 'Distributor') {
                 router.replace('/(distributor-tabs)/DistributorMainScreen');
-              }
-              else if (response.data.role === 'Buyer') {
+            } else {
                 router.replace('/(tabs)/HomeScreen');
-              }
-          }
-        } catch (error) {
-          console.error('Login error:', error);
-          alert('Invalid credentials. Please try again.');
+            }
+        } else {
+            alert(error || 'Invalid credentials');
         }
-      };
-      
+    };
+
+
     return (
         <View style={styles.container}>
             <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
@@ -68,7 +86,7 @@ export default function LoginScreen() {
             </TouchableOpacity>
             <TouchableOpacity
                 style={styles.loginBtn}
-                onPress={() =>handleLogin()}>
+                onPress={() => handleLogin()}>
                 <Text style={[styles.loginText, globalStyles.h4]}>Login</Text>
             </TouchableOpacity>
             <View style={styles.bottomRow}>

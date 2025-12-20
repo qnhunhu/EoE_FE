@@ -1,6 +1,4 @@
-import Config from '@/constants';
 import { Cart } from '@/types/Cart';
-import axios from 'axios';
 import { useEffect, useState } from 'react';
 export default function useCart(buyerId: number | undefined) {
   const [cart, setCart] = useState<Cart | null>(null);
@@ -12,8 +10,12 @@ export default function useCart(buyerId: number | undefined) {
 
     const fetchCart = async () => {
       try {
-        const response = await axios.get<Cart>(`${Config.API_BASE_URL}/api/Cart/${buyerId}`);
-        setCart(response.data);
+        // Simulate network delay
+        await new Promise(resolve => setTimeout(resolve, 500));
+        setCart(require('../constants/MockData').MOCK_CART);
+
+        // const response = await axios.get<Cart>(`${Config.API_BASE_URL}/api/Cart/${buyerId}`);
+        // setCart(response.data);
       } catch (err) {
         console.error('Failed to fetch cart:', err);
         setError(err);

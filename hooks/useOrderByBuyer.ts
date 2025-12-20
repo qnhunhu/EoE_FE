@@ -1,7 +1,5 @@
 // hooks/useOrdersByBuyer.ts
-import axios from 'axios';
 import { useEffect, useState } from 'react';
-import Config from '../constants';
 import { Order } from '../types/Order';
 
 // export default function useOrdersByBuyer(buyerId: number) {
@@ -35,8 +33,12 @@ export default function useOrdersByBuyer(buyerId: number) {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${Config.API_BASE_URL}/api/Order/buyer-history/${buyerId}`);
-      setOrders(res.data);
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setOrders(require('../constants/MockData').MOCK_ORDERS);
+
+      //   const res = await axios.get(`${Config.API_BASE_URL}/api/Order/buyer-history/${buyerId}`);
+      //   setOrders(res.data);
     } catch (err) {
       setError(err);
     } finally {

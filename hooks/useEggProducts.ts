@@ -10,19 +10,25 @@ export default function useEggProducts() {
 
   const fetchProducts = () => {
     setLoading(true);
-    axios
-      .get(`${Config.API_BASE_URL}/api/Egg`)
-      .then((res) => {
-        setProducts(res.data);
-        setError(null);
-      })
-      .catch((err) => {
-        console.error('Failed to fetch eggs', err);
-        setError('Failed to fetch products');
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+    // Simulate network delay
+    setTimeout(() => {
+      setProducts(require('../constants/MockData').MOCK_PRODUCTS);
+      setLoading(false);
+    }, 500);
+
+    // axios
+    //   .get(`${Config.API_BASE_URL}/api/Egg`)
+    //   .then((res) => {
+    //     setProducts(res.data);
+    //     setError(null);
+    //   })
+    //   .catch((err) => {
+    //     console.error('Failed to fetch eggs', err);
+    //     setError('Failed to fetch products');
+    //   })
+    //   .finally(() => {
+    //     setLoading(false);
+    //   });
   };
 
   // Fetch data on mount
@@ -60,7 +66,7 @@ export default function useEggProducts() {
     try {
       setLoading(true);
       await axios.delete(`${Config.API_BASE_URL}/api/Egg/${eggId}`);
-      setProducts((prev) => prev.filter((p) => p.eggId !== eggId)); 
+      setProducts((prev) => prev.filter((p) => p.eggId !== eggId));
     } catch (err) {
       console.error('Failed to delete product', err);
       setError('Failed to delete product');

@@ -10,7 +10,7 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function OrderDetailsScreen() {
-    const { orderId } = useLocalSearchParams<{ orderId: string }>();
+    const { orderId, order: orderString } = useLocalSearchParams<{ orderId: string; order?: string }>();
     const router = useRouter();
     const { userId, role } = useAuth();
     
@@ -18,12 +18,19 @@ export default function OrderDetailsScreen() {
     const { orders, loading, error } = useOrdersByBuyer(userId);
 
     const order = React.useMemo(() => {
+        if (orderString) {
+            try {
+                return JSON.parse(orderString);
+            } catch (e) {
+                console.error("Error parsing order param", e);
+            }
+        }
         if (!orderId || orders.length === 0) return null;
         return orders.find(o => o.orderId.toString() === orderId);
-    }, [orders, orderId]);
+    }, [orders, orderId, orderString]);
 
     const renderContent = () => {
-        if (loading) {
+        if (loading && !order) {
             return (
                 <View style={styles.centered}>
                     <ActivityIndicator size="large" color={Colors.light.primary} />
@@ -55,7 +62,7 @@ export default function OrderDetailsScreen() {
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                <TouchableOpacity onPress={() => router.push('/(tabs)/MyOrders')} style={styles.backButton}>
                     <Ionicons name="arrow-back" size={24} color={Colors.light.text.primary} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Order Details</Text>

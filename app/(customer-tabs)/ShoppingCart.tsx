@@ -5,8 +5,8 @@ import { useAuth } from '@/contexts/AuthContent';
 import useCart from '@/hooks/useCart';
 import useEggProducts from '@/hooks/useEggProducts';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { useNavigation, useRouter, useFocusEffect } from 'expo-router';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
     ActivityIndicator,
     Image,
@@ -25,11 +25,17 @@ const ShoppingCart = () => {
     const navigation = useNavigation();
     const router = useRouter();
     const { userId } = useAuth();
-    const { cart, loading, error } = useCart(userId || 3);
+    const { cart, loading, error, refetch, removeFromCart } = useCart(userId || 3) as any;
     const { products } = useEggProducts();
 
     const [items, setItems] = useState<any[]>([]);
     const [selectAll, setSelectAll] = useState(false);
+
+    useFocusEffect(
+        useCallback(() => {
+            refetch?.();
+        }, [])
+    );
 
     useEffect(() => {
         if (cart && products) {
@@ -89,7 +95,12 @@ const ShoppingCart = () => {
         }
     };
 
-    const handleRemoveItem = (index: number) => {
+    const handleRemoveItem = async (index: number) => {
+        const item = items[index];
+        if (item && removeFromCart) {
+            await removeFromCart(item.eggId);
+            await refetch?.();
+        }
         const newItems = [...items];
         newItems.splice(index, 1);
         setItems(newItems);

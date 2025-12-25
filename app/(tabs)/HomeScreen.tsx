@@ -1,11 +1,14 @@
 
+import ProductCard from '@/components/ProductCard';
 import { Colors } from '@/constants/Colors';
 import useEggProducts from '@/hooks/useEggProducts'; // Assuming this hook exists and fetches data
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -102,6 +105,135 @@ export default function HomeScreen() {
       return matchesQuery && matchesCategory;
     });
   }, [products, searchTerm, query, selectedCategory]);
+
+  return (
+    <View style={styles.container}>
+      <View style={{ paddingTop: 50, backgroundColor: '#fff' }}>
+        {renderHeader()}
+      </View>
+
+      {loading ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={Colors.light.primary} />
+        </View>
+      ) : (
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Categories */}
+          <View style={styles.categorySection}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
+              {categories.map((cat) => (
+                <TouchableOpacity
+                  key={cat.id}
+                  style={[styles.categoryChip, selectedCategory === cat.label && styles.categoryChipSelected]}
+                  onPress={() => setSelectedCategory(cat.label)}
+                >
+                  <Ionicons
+                    name={cat.icon as any}
+                    size={20}
+                    color={selectedCategory === cat.label ? '#fff' : Colors.light.text.secondary}
+                    style={{ marginRight: 8 }}
+                  />
+                  <Text style={[styles.categoryText, selectedCategory === cat.label && styles.categoryTextSelected]}>
+                    {cat.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+
+          {(searchTerm || selectedCategory !== 'All') ? (
+            <View style={{ paddingHorizontal: 16 }}>
+              <Text style={styles.sectionTitle}>Results ({filteredProducts.length})</Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+                {filteredProducts.map((item) => (
+                  <ProductCard
+                    key={item.eggId}
+                    id={item.eggId}
+                    image={item.imageURL}
+                    title={item.name}
+                    oldPrice={item.price * 1.2}
+                    newPrice={item.price}
+                    sold={item.soldCount || 0}
+                  />
+                ))}
+              </View>
+            </View>
+          ) : (
+            <>
+              {/* Popular Section */}
+              <View style={{ marginBottom: 24 }}>
+                <View style={styles.productListHeader}>
+                  <Text style={styles.sectionTitle}>Popular</Text>
+                  <TouchableOpacity onPress={() => router.push({ pathname: '/(customer-tabs)/AllProductsScreen', params: { category: 'popular', title: 'Popular Products' } })}>
+                    <Text style={styles.seeAll}>See All</Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', paddingHorizontal: 16 }}>
+                  {popularProducts.map((item) => (
+                    <ProductCard
+                      key={item.eggId}
+                      id={item.eggId}
+                      image={item.imageURL}
+                      title={item.name}
+                      oldPrice={item.price * 1.2}
+                      newPrice={item.price}
+                      sold={item.soldCount || 0}
+                    />
+                  ))}
+                </View>
+              </View>
+
+              {/* Fresh Section */}
+              <View style={{ marginBottom: 24 }}>
+                <View style={styles.productListHeader}>
+                  <Text style={styles.sectionTitle}>Fresh Everyday</Text>
+                  <TouchableOpacity onPress={() => router.push({ pathname: '/(customer-tabs)/AllProductsScreen', params: { category: 'fresh', title: 'Fresh Products' } })}>
+                    <Text style={styles.seeAll}>See All</Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', paddingHorizontal: 16 }}>
+                  {freshProducts.slice(0, 4).map((item) => (
+                    <ProductCard
+                      key={item.eggId}
+                      id={item.eggId}
+                      image={item.imageURL}
+                      title={item.name}
+                      oldPrice={item.price * 1.2}
+                      newPrice={item.price}
+                      sold={item.soldCount || 0}
+                    />
+                  ))}
+                </View>
+              </View>
+
+              {/* Special Section */}
+              <View style={{ marginBottom: 100 }}>
+                <View style={styles.productListHeader}>
+                  <Text style={styles.sectionTitle}>Special Choice</Text>
+                  <TouchableOpacity onPress={() => router.push({ pathname: '/(customer-tabs)/AllProductsScreen', params: { category: 'special', title: 'Special Choice' } })}>
+                    <Text style={styles.seeAll}>See All</Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={{ paddingHorizontal: 16, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+                  {specialProducts.map((item) => (
+                    <ProductCard
+                      key={item.eggId}
+                      id={item.eggId}
+                      image={item.imageURL}
+                      title={item.name}
+                      oldPrice={item.price * 1.2}
+                      newPrice={item.price}
+                      sold={item.soldCount || 0}
+                    />
+                  ))}
+                </View>
+              </View>
+            </>
+          )}
+        </ScrollView>
+      )}
+    </View>
+  );
 }
 
 

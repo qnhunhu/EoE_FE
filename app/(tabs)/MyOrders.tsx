@@ -9,7 +9,7 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View, Image } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
-const statusConfig = {
+const statusConfig: Record<string, { title: string; color: string; icon: string }> = {
   [OrderStatus.ORDERED]: {
     title: 'Đang xử lý',
     color: '#FFA500',
@@ -48,19 +48,23 @@ export default function MyOrders() {
     {} as Record<OrderStatus, Order[]>
   );
 
+  const calculateTotal = (order: Order) => {
+    return order.payment?.amount || order.orderDetails.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
+  };
+
   const renderOrderItem = (order: Order) => (
     <TouchableOpacity
       key={order.orderId}
       style={styles.orderItem}
       onPress={() => router.push({
-        pathname: '/OrderDetailsScreen',
-        params: { order: JSON.stringify(order) },
+        pathname: '/(customer-tabs)/OrderDetailsScreen',
+        params: { orderId: order.orderId, order: JSON.stringify(order) },
       })}
     >
       <View style={styles.orderHeader}>
         <View style={styles.orderInfo}>
           <Text style={styles.orderId}>Mã đơn: #{order.orderId}</Text>
-          <Text style={styles.orderDate}>{new Date(order.createdAt).toLocaleDateString()}</Text>
+          <Text style={styles.orderDate}>{order.payment?.paymentDate ? new Date(order.payment.paymentDate).toLocaleDateString() : ''}</Text>
         </View>
         <View style={[styles.statusBadge, { backgroundColor: statusConfig[order.status]?.color + '20' }]}>
           <Ionicons 
@@ -78,13 +82,13 @@ export default function MyOrders() {
         {order.orderDetails.slice(0, 2).map((item, idx) => (
           <View key={idx} style={styles.productItem}>
             <Image 
-              source={{ uri: item.product.imageURL }} 
+              source={{ uri: item.eggImageURL }} 
               style={styles.productImage} 
               resizeMode="cover"
             />
             <View style={styles.productInfo}>
-              <Text style={styles.productName} numberOfLines={1}>{item.product.name}</Text>
-              <Text style={styles.productPrice}>{item.quantity} x {item.price.toLocaleString()}đ</Text>
+              <Text style={styles.productName} numberOfLines={1}>{item.eggName}</Text>
+              <Text style={styles.productPrice}>{item.quantity} x {item.unitPrice.toLocaleString()}đ</Text>
             </View>
           </View>
         ))}
@@ -95,22 +99,30 @@ export default function MyOrders() {
 
       <View style={styles.orderFooter}>
         <Text style={styles.totalPrice}>
-          Tổng tiền: <Text style={styles.price}>{order.totalAmount.toLocaleString()}đ</Text>
+          Tổng tiền: <Text style={styles.price}>{calculateTotal(order).toLocaleString()}đ</Text>
         </Text>
         <View style={styles.actionButtons}>
           {order.status === OrderStatus.DELIVERED && (
-            <TouchableOpacity style={styles.actionButton}>
-              <Text style={styles.actionButtonText}>Đánh giá</Text>
-            </TouchableOpacity>
+            <>
+              <TouchableOpacity 
+                style={styles.actionButton}
+                onPress={() => router.push({
+                  pathname: '/(customer-tabs)/ReviewProductScreen',
+                  params: { order: JSON.stringify(order) }
+                })}
+              >
+                <Text style={styles.actionButtonText}>Đánh giá</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.actionButton, styles.buyAgainButton]}
+                onPress={() => {
+                  // Handle buy again logic
+                }}
+              >
+                <Text style={[styles.actionButtonText, { color: Colors.light.primary }]}>Mua lại</Text>
+              </TouchableOpacity>
+            </>
           )}
-          <TouchableOpacity 
-            style={[styles.actionButton, styles.buyAgainButton]}
-            onPress={() => {
-              // Handle buy again logic
-            }}
-          >
-            <Text style={[styles.actionButtonText, { color: Colors.light.primary }]}>Mua lại</Text>
-          </TouchableOpacity>
         </View>
       </View>
     </TouchableOpacity>
@@ -134,7 +146,7 @@ export default function MyOrders() {
               </Text>
               <TouchableOpacity 
                 onPress={() => router.push({
-                  pathname: '/OrdersByStatusScreen',
+                  pathname: '/(customer-tabs)/OrdersByStatusScreen',
                   params: { 
                     status, 
                     title: statusConfig[status as OrderStatus]?.title || status,

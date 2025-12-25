@@ -22,7 +22,7 @@ export default function ReviewProductScreen() {
     const parsedOrder = order ? JSON.parse(order as string) : { items: [] };
 
     const [reviews, setReviews] = useState(
-        parsedOrder.items ? parsedOrder.items.map(() => ({
+        parsedOrder.orderDetails ? parsedOrder.orderDetails.map(() => ({
             rating: 0,
             comment: '',
         })) : []
@@ -71,17 +71,17 @@ export default function ReviewProductScreen() {
             </View>
 
             <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-                {parsedOrder.items && parsedOrder.items.length > 0 ? (
-                    parsedOrder.items.map((item: any, index: number) => (
+                {parsedOrder.orderDetails && parsedOrder.orderDetails.length > 0 ? (
+                    parsedOrder.orderDetails.map((item: any, index: number) => (
                         <View key={index} style={[styles.itemReview, globalStyles.shadow]}>
                             {/* Product Information */}
                             <View style={styles.productRow}>
                                 <Image
-                                    source={item.image ? { uri: item.image } : require('../../assets/images/logoNormal.png')}
+                                    source={item.eggImageURL ? { uri: item.eggImageURL } : require('../../assets/images/logoNormal.png')}
                                     style={styles.productImage}
                                 />
                                 <View style={{ flex: 1, marginLeft: 12 }}>
-                                    <Text style={styles.textBold} numberOfLines={2}>{item.name}</Text>
+                                    <Text style={styles.textBold} numberOfLines={2}>{item.eggName}</Text>
                                     <Text style={styles.textGray}>Quantity: {item.quantity}</Text>
                                 </View>
                             </View>
@@ -132,7 +132,7 @@ export default function ReviewProductScreen() {
                 )}
 
                 {/* Submit Button */}
-                {parsedOrder.items && parsedOrder.items.length > 0 && (
+                {parsedOrder.orderDetails && parsedOrder.orderDetails.length > 0 && (
                     <TouchableOpacity style={[globalStyles.btnPrimary, styles.submitButton]} onPress={handleSubmit}>
                         <Text style={globalStyles.btnPrimaryText}>Submit Review</Text>
                     </TouchableOpacity>

@@ -6,8 +6,8 @@ export interface Product {
     price: number;
     stockQuantity: number;
     imageURL: string;
-    soldCount: number;
-    orderDetails: any[]; // Replace with actual type if available
-    ratings: any[]; // Replace with actual type if available
+    soldCount?: number;
+    orderDetails?: any[]; // Replace with actual type if available
+    ratings?: any[]; // Replace with actual type if available
     category?: string;
   }

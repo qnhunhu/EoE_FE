@@ -4,6 +4,7 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const W_StartScreen = () => {
     const router = useRouter();
+    console.log('Rendering W_StartScreen');
 
     return (
         <View style={styles.container}>

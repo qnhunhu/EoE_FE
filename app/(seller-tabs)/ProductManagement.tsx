@@ -6,13 +6,13 @@ import { uploadImageToCloudinary } from '@/utils/cloudinary';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { use, useEffect, useState } from 'react';
 import { Dimensions, Image, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 const PRODUCT_IMAGE = require('../../assets/images/logoNormal.png');
 
 const ProductManagement = () => {
     const router = useRouter();
-    const { store, loading, error,refetchStore } = useStore(2); 
+    const { store, loading, error,refetchStore } = useStore(4); 
     const { products, addProduct, updateProduct, deleteProduct, refetch } = useEggProducts();
 
     // All hooks must be called before any return!
@@ -29,8 +29,7 @@ const ProductManagement = () => {
         stockQuantity: 0, 
     });
 
-    if (loading) return <Text>Loading...</Text>;
-    if (error) return <Text>Error loading store</Text>;
+
 
 
 
@@ -47,20 +46,23 @@ const ProductManagement = () => {
         return '';
     };
     
+    // Filter products belonging to the current store from the global products list
+    const storeProducts = products?.filter(p => p.storeId === (store?.storeId || 4)) ?? [];
+
+    // Lọc sản phẩm theo search
+    const filteredProducts = storeProducts.filter(p =>
+        p.name.toLowerCase().includes(searchText.toLowerCase())
+    );
+
     const handleCheckAll = () => {
         if (selectAll) {
             setSelectedProducts([]);
             setSelectAll(false);
         } else {
-            setSelectedProducts(Array.from({ length:store?.eggs.length??0 }, (_, i) => i));
+            setSelectedProducts(Array.from({ length: filteredProducts.length }, (_, i) => i));
             setSelectAll(true);
         }
     };
-
-    // Lọc sản phẩm theo search
-    const filteredProducts = store?.eggs.filter(
-        p => p.name.toLowerCase().includes(searchText.toLowerCase())
-    ) || [];
 
     const pickImage = async (imgIdx: number) => {
         let result = await ImagePicker.launchImageLibraryAsync({
@@ -148,6 +150,23 @@ const handleAddOrUpdate = async () => {
     await refetch();
 };
 
+useEffect(() => {
+  console.log('ProductManagement rendered');
+  console.log('Current store:', store);
+  console.log('Current products:', products);
+  console.log('Selected products:', selectedProducts);
+}, [store, products, selectedProducts]);
+
+if (loading) {
+  return <Text>Loading...</Text>;
+}
+
+if (error) {
+  return <Text>Error loading store</Text>;
+}
+
+
+
     return (
         <View style={styles.bg}>
             {/* Header */}
@@ -233,7 +252,7 @@ const handleAddOrUpdate = async () => {
                     >
                         <Image source={{uri:product.imageURL}} style={styles.productImage} />
 
-                        <Text style={[globalStyles.p2Medium, styles.productName]} numberOfLines={1}>{product.name}</Text>
+                        <Text style={[globalStyles.p2Regular, styles.productName]} numberOfLines={1}>{product.name}</Text>
                         <View style={{ width: '100%', flexDirection: 'row', alignItems: 'center', marginTop: 2, justifyContent: 'space-between' }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2, }}>
                                 <Text style={styles.productPrice}>${product.price.toFixed(2)}</Text>

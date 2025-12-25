@@ -54,6 +54,7 @@ const UserManagement = () => {
         ratings: [],
     });
     const { accounts,loading,error} = useAccounts();
+    console.log('Accounts data:', accounts);
     const [editIndex, setEditIndex] = useState<number | null>(null);
     const [rows, setRows] = useState(accounts);
 

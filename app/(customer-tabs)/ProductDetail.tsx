@@ -173,7 +173,7 @@ export default function ProductDetailScreen() {
                             <ProductCard
                                 key={p.eggId}
                                 id={p.eggId}
-                                sold={p.soldCount}
+                                sold={p.soldCount || 0}
                                 title={p.name}
                                 oldPrice={p.price * 1.5}
                                 newPrice={p.price}

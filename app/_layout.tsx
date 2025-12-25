@@ -1,4 +1,6 @@
 import { AuthProvider } from '@/contexts/AuthContent';
+import { Provider as PaperProvider } from 'react-native-paper';
+import { ToastProvider } from '@/components/GlobalToast';
 import { Slot } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Platform } from 'react-native';
@@ -21,18 +23,26 @@ export default function RootLayout() {
 
   if (Platform.OS === 'web') {
     return (
-      <AuthProvider>
-        {showSplash ? <M_StartScreen /> : <Slot />}
-      </AuthProvider>
+      <PaperProvider>
+        <ToastProvider>
+          <AuthProvider>
+            {showSplash ? <M_StartScreen /> : <Slot />}
+          </AuthProvider>
+        </ToastProvider>
+      </PaperProvider>
     );
   } else {
     if (showSplash) {
       return <W_StartScreen />;
     }
     return (
-      <AuthProvider>
-        <Slot />
-      </AuthProvider>
+      <PaperProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <Slot />
+          </AuthProvider>
+        </ToastProvider>
+      </PaperProvider>
     );
   }
 }

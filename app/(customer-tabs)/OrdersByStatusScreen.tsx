@@ -1,91 +1,234 @@
 
 import OrderCard from '@/components/OrderCard';
+
 import { Colors } from '@/constants/Colors';
+
 import { useAuth } from '@/contexts/AuthContent';
+
+import useOrdersByBuyer from '@/hooks/useOrderByBuyer';
+
 import { Order } from '@/types/Order';
+
 import { Ionicons } from '@expo/vector-icons';
+
 import { useLocalSearchParams, useRouter } from 'expo-router';
+
 import React from 'react';
+
 import {
+
+    ActivityIndicator,
+
+    FlatList,
+
     SafeAreaView,
-    ScrollView,
+
     StyleSheet,
+
     Text,
+
     TouchableOpacity,
+
     View
+
 } from 'react-native';
 
+
+
 export default function OrdersByStatusScreen() {
-    const { status, orders } = useLocalSearchParams();
+
+    const { status } = useLocalSearchParams<{ status: string }>();
+
     const router = useRouter();
+
     const { userId, role } = useAuth();
 
-    const parsedOrders = orders ? JSON.parse(orders as string) : [];
-    const filteredOrders = parsedOrders.sort(
-        (a: Order, b: Order) =>
-            new Date(b.payment.paymentDate).getTime() - new Date(a.payment.paymentDate).getTime()
+    const { orders, loading, error } = useOrdersByBuyer(userId);
+
+
+
+    const filteredOrders = React.useMemo(() => {
+
+        if (!orders || !status) return [];
+
+        return orders
+
+            .filter(o => o.status === status)
+
+            .sort((a: Order, b: Order) => {
+
+                const dateA = a.payment?.paymentDate ? new Date(a.payment.paymentDate).getTime() : 0;
+
+                const dateB = b.payment?.paymentDate ? new Date(b.payment.paymentDate).getTime() : 0;
+
+                return dateB - dateA;
+
+            });
+
+    }, [orders, status]);
+
+
+
+    const renderItem = ({ item }: { item: Order }) => (
+
+        <TouchableOpacity
+
+            activeOpacity={0.9}
+
+            onPress={() => router.push({
+
+                pathname: `/OrderDetailsScreen`,
+
+                params: { orderId: item.orderId },
+
+            })}
+
+            style={{ marginBottom: 16 }}
+
+        >
+
+            <OrderCard order={item} role={role || 'Buyer'} />
+
+        </TouchableOpacity>
+
     );
+
+
+
+    const renderContent = () => {
+
+        if (loading) {
+
+            return <ActivityIndicator size="large" color={Colors.light.primary} style={styles.centered} />;
+
+        }
+
+
+
+        if (error) {
+
+            return <Text style={styles.centered}>Error fetching orders.</Text>;
+
+        }
+
+
+
+        return (
+
+            <FlatList
+
+                data={filteredOrders}
+
+                renderItem={renderItem}
+
+                keyExtractor={(item) => item.orderId.toString()}
+
+                contentContainerStyle={{ padding: 16 }}
+
+                ListEmptyComponent={
+
+                    <View style={styles.centered}>
+
+                        <Text style={{ color: Colors.light.text.secondary }}>No orders found in this status.</Text>
+
+                    </View>
+
+                }
+
+            />
+
+        );
+
+    };
+
+
 
     return (
+
         <SafeAreaView style={styles.container}>
-            {/* Header with Back Button */}
+
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.replace(`/(tabs)/MyOrders`)} style={styles.backButton}>
+
+                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+
                     <Ionicons name="arrow-back" size={24} color={Colors.light.text.primary} />
+
                 </TouchableOpacity>
+
                 <Text style={styles.headerTitle}>{status || 'Orders'}</Text>
+
+                <View style={{ width: 24 }} />
+
             </View>
 
-            <ScrollView contentContainerStyle={{ paddingBottom: 100, paddingHorizontal: 16, paddingTop: 16 }}>
-                <View style={styles.listContainer}>
-                    {filteredOrders.length === 0 ? (
-                        <View style={{ alignItems: 'center', marginTop: 40 }}>
-                            <Text style={{ color: Colors.light.text.secondary }}>No orders found in this status.</Text>
-                        </View>
-                    ) : (
-                        filteredOrders.map((order: Order, index: number) => (
-                            <TouchableOpacity key={index}
-                                activeOpacity={0.9}
-                                onPress={() => router.push({
-                                    pathname: `/OrderDetailsScreen`,
-                                    params: { order: JSON.stringify(order) },
-                                })}
-                                style={{ marginBottom: 16 }}
-                            >
-                                <OrderCard order={order} role={role || 'Buyer'} />
-                            </TouchableOpacity>
-                        ))
-                    )}
-                </View>
-            </ScrollView>
+            {renderContent()}
+
         </SafeAreaView>
+
     );
+
 }
 
+
+
 const styles = StyleSheet.create({
+
     container: {
+
         flex: 1,
+
         backgroundColor: Colors.light.background,
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        backgroundColor: '#fff',
-        borderBottomWidth: 1,
-        borderBottomColor: Colors.light.border,
-    },
-    backButton: {
-        marginRight: 16,
-        padding: 4,
-    },
-    headerTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: Colors.light.text.primary,
-    },
-    listContainer: {
 
     },
+
+    centered: {
+
+        flex: 1,
+
+        justifyContent: 'center',
+
+        alignItems: 'center',
+
+        marginTop: 50,
+
+    },
+
+    header: {
+
+        flexDirection: 'row',
+
+        alignItems: 'center',
+
+        justifyContent: 'space-between',
+
+        paddingHorizontal: 16,
+
+        paddingVertical: 12,
+
+        backgroundColor: '#fff',
+
+        borderBottomWidth: 1,
+
+        borderBottomColor: Colors.light.border,
+
+    },
+
+    backButton: {
+
+        marginRight: 16,
+
+        padding: 4,
+
+    },
+
+    headerTitle: {
+
+        fontSize: 18,
+
+        fontWeight: 'bold',
+
+        color: Colors.light.text.primary,
+
+    },
+
 });

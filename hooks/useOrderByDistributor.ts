@@ -1,6 +1,8 @@
 // hooks/useOrdersByBuyer.ts
 import { useEffect, useState } from 'react';
 import { Order } from '../types/Order';
+import axios from 'axios';
+import Config from '../constants';
 
 export default function useOrdersDistributor(distributorId: number) {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -12,10 +14,10 @@ export default function useOrdersDistributor(distributorId: number) {
     try {
       // Simulate network delay
       await new Promise(resolve => setTimeout(resolve, 500));
-      setOrders(require('../constants/MockData').MOCK_ORDERS);
+      // setOrders(require('../constants/MockData').MOCK_ORDERS);
 
-      // const res = await axios.get(`${Config.API_BASE_URL}/api/Order/distributorId-history/${distributorId}`);
-      // setOrders(res.data);
+      const res = await axios.get(`${Config.API_BASE_URL}/api/Order/distributorId-history/${distributorId}`);
+      setOrders(res.data);
     } catch (err) {
       setError(err);
     } finally {

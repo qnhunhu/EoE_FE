@@ -9,7 +9,8 @@ import useProductDetail from '@/hooks/useProductDetail';
 import useStore from '@/hooks/useStore';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useToast } from '@/components/GlobalToast';
 import {
     ActivityIndicator,
     Image,
@@ -40,14 +41,25 @@ export default function ProductDetailScreen() {
     // Store data (mock or real)
     const { store: storeData } = useStore(product?.storeId || 2);
 
-    const handleAddToCart = () => {
-        addToCart({
+    useEffect(() => {
+        console.log("product data",product)
+        console.log("store data",storeData)
+    },[product]);
+
+    const { showToast } = useToast();
+
+    const handleAddToCart = async () => {
+        const res = await addToCart({
             eggId: Number(id) || 1,
             quantity: quantity,
             buyerId: userId || 1,
         });
         setIsModalVisible(false);
-        alert('Added to cart!'); // Simple feedback
+        if (res?.ok) {
+            showToast('Added to cart!');
+        } else {
+            showToast(res?.error || 'Failed to add to cart');
+        }
     }
 
     const handleBuyNow = () => {
@@ -245,6 +257,7 @@ export default function ProductDetailScreen() {
                     </View>
                 </View>
             </Modal>
+            
         </View>
     );
 }

@@ -1,17 +1,42 @@
+import React from 'react';
 import OrderCard from '@/components/OrderCard';
 import { Colors } from '@/constants/Colors';
 import { useAuth } from '@/contexts/AuthContent';
 import useOrdersByBuyer from '@/hooks/useOrderByBuyer';
 import { Order, OrderStatus } from '@/types/Order';
 import { useRouter } from 'expo-router';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+
+const statusConfig = {
+  [OrderStatus.ORDERED]: {
+    title: 'Đang xử lý',
+    color: '#FFA500',
+    icon: 'time-outline',
+  },
+  [OrderStatus.DELIVERING]: {
+    title: 'Đang giao hàng',
+    color: '#1E90FF',
+    icon: 'bicycle-outline',
+  },
+  [OrderStatus.DELIVERED]: {
+    title: 'Đã giao hàng',
+    color: '#32CD32',
+    icon: 'checkmark-done-outline',
+  },
+  [OrderStatus.CANCELLED]: {
+    title: 'Đã hủy',
+    color: '#FF0000',
+    icon: 'close-circle-outline',
+  },
+};
 
 export default function MyOrders() {
-  const { userId, role } = useAuth();
+  const { userId } = useAuth();
   const { orders } = useOrdersByBuyer(userId || 3);
-
   const router = useRouter();
+
   const groupedOrders = orders.reduce(
     (acc: Record<OrderStatus, Order[]>, order) => {
       if (!acc[order.status]) {
@@ -23,52 +48,106 @@ export default function MyOrders() {
     {} as Record<OrderStatus, Order[]>
   );
 
+  const renderOrderItem = (order: Order) => (
+    <TouchableOpacity
+      key={order.orderId}
+      style={styles.orderItem}
+      onPress={() => router.push({
+        pathname: '/OrderDetailsScreen',
+        params: { order: JSON.stringify(order) },
+      })}
+    >
+      <View style={styles.orderHeader}>
+        <View style={styles.orderInfo}>
+          <Text style={styles.orderId}>Mã đơn: #{order.orderId}</Text>
+          <Text style={styles.orderDate}>{new Date(order.createdAt).toLocaleDateString()}</Text>
+        </View>
+        <View style={[styles.statusBadge, { backgroundColor: statusConfig[order.status]?.color + '20' }]}>
+          <Ionicons 
+            name={statusConfig[order.status]?.icon as any} 
+            size={16} 
+            color={statusConfig[order.status]?.color} 
+          />
+          <Text style={[styles.statusText, { color: statusConfig[order.status]?.color }]}>
+            {statusConfig[order.status]?.title || order.status}
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.orderProducts}>
+        {order.orderDetails.slice(0, 2).map((item, idx) => (
+          <View key={idx} style={styles.productItem}>
+            <Image 
+              source={{ uri: item.product.imageURL }} 
+              style={styles.productImage} 
+              resizeMode="cover"
+            />
+            <View style={styles.productInfo}>
+              <Text style={styles.productName} numberOfLines={1}>{item.product.name}</Text>
+              <Text style={styles.productPrice}>{item.quantity} x {item.price.toLocaleString()}đ</Text>
+            </View>
+          </View>
+        ))}
+        {order.orderDetails.length > 2 && (
+          <Text style={styles.moreItems}>+{order.orderDetails.length - 2} sản phẩm khác</Text>
+        )}
+      </View>
+
+      <View style={styles.orderFooter}>
+        <Text style={styles.totalPrice}>
+          Tổng tiền: <Text style={styles.price}>{order.totalAmount.toLocaleString()}đ</Text>
+        </Text>
+        <View style={styles.actionButtons}>
+          {order.status === OrderStatus.DELIVERED && (
+            <TouchableOpacity style={styles.actionButton}>
+              <Text style={styles.actionButtonText}>Đánh giá</Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity 
+            style={[styles.actionButton, styles.buyAgainButton]}
+            onPress={() => {
+              // Handle buy again logic
+            }}
+          >
+            <Text style={[styles.actionButtonText, { color: Colors.light.primary }]}>Mua lại</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Orders</Text>
+        <Text style={styles.headerTitle}>Đơn hàng của tôi</Text>
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
-        {Object.keys(groupedOrders).length === 0 ? (
-          <View style={{ padding: 20, alignItems: 'center' }}>
-            <Text>No orders found.</Text>
-          </View>
-        ) : (
-          Object.keys(groupedOrders).map((status) => (
-            <View key={status} style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>{status}</Text>
-                <TouchableOpacity onPress={() => router.push({
-                  pathname: `/OrdersByStatusScreen`,
-                  params: { status, orders: JSON.stringify(groupedOrders[status as OrderStatus]) },
-                })}>
-                  <Text style={styles.seeMore}>See more</Text>
-                </TouchableOpacity>
-              </View>
-              <View style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 20,
-              }}>
-                {groupedOrders[status as OrderStatus].map((order, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    onPress={() => router.push({
-                      pathname: `/OrderDetailsScreen`,
-                      params: { order: JSON.stringify(order) },
-                    })}>
-                    <OrderCard
-                      order={{ ...order, orderDetails: order.orderDetails.slice(0, 2) }}
-                      role={role || 'Buyer'}
-                    />
-                  </TouchableOpacity>
-                ))}
-              </View>
-
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {Object.entries(groupedOrders).map(([status, orders]) => (
+          <View key={status} style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>
+                {statusConfig[status as OrderStatus]?.title || status}
+              </Text>
+              <TouchableOpacity 
+                onPress={() => router.push({
+                  pathname: '/OrdersByStatusScreen',
+                  params: { 
+                    status, 
+                    title: statusConfig[status as OrderStatus]?.title || status,
+                    orders: JSON.stringify(orders) 
+                  },
+                })}
+              >
+                <Text style={styles.seeMore}>Xem tất cả</Text>
+              </TouchableOpacity>
             </View>
-          ))
-        )}
+            {orders.map(renderOrderItem)}
+          </View>
+        ))}
       </ScrollView>
     </SafeAreaView>
   );
@@ -77,106 +156,153 @@ export default function MyOrders() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F4F4F4',
+    backgroundColor: '#F8F9FA',
   },
   header: {
     backgroundColor: '#fff',
-    paddingVertical: 16,
-    paddingHorizontal: 20,
+    padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
+    elevation: 2,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: Colors.light.primary,
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  scrollContent: {
+    padding: 12,
   },
   section: {
-    backgroundColor: '#fff',
-    marginBottom: 10,
-    padding: 16,
+    marginBottom: 16,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 12,
+    paddingHorizontal: 4,
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
     color: '#333',
   },
   seeMore: {
-    color: '#006D5B',
-    fontWeight: 'bold',
+    color: Colors.light.primary,
+    fontSize: 14,
   },
-  orderRow: {
+  orderItem: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  orderHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  orderInfo: {
+    flex: 1,
+  },
+  orderId: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  orderDate: {
+    fontSize: 12,
+    color: '#888',
+  },
+  statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    backgroundColor: '#f0f0f0',
+  },
+  statusText: {
+    fontSize: 12,
+    marginLeft: 4,
+    fontWeight: '500',
+  },
+  orderProducts: {
+    marginBottom: 12,
+  },
+  productItem: {
+    flexDirection: 'row',
+    marginBottom: 12,
   },
   productImage: {
     width: 60,
     height: 60,
     borderRadius: 8,
+    marginRight: 12,
   },
-  textBold: {
-    fontWeight: 'bold',
+  productInfo: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  productName: {
+    fontSize: 14,
     color: '#333',
+    marginBottom: 4,
   },
-  textPrice: {
-    color: '#C22727',
-    fontWeight: 'bold',
-    marginRight: 8,
+  productPrice: {
+    fontSize: 14,
+    color: '#E53935',
+    fontWeight: '500',
   },
-  textOldPrice: {
-    color: '#999',
-    textDecorationLine: 'line-through',
-  },
-  textGray: {
-    color: '#666',
+  moreItems: {
     fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
     marginTop: 4,
   },
-  orderDetails: {
-    marginTop: 10,
+  orderFooter: {
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+    paddingTop: 12,
+  },
+  totalPrice: {
+    textAlign: 'right',
+    fontSize: 14,
+    color: '#333',
+    marginBottom: 12,
+  },
+  price: {
+    fontWeight: 'bold',
+    color: '#E53935',
   },
   actionButtons: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 10,
+    justifyContent: 'flex-end',
+    gap: 8,
   },
   actionButton: {
-    flex: 1,
+    paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#C22727',
-    alignItems: 'center',
-    marginHorizontal: 5,
+    borderColor: '#ddd',
   },
   actionButtonText: {
-    color: '#C22727',
-    fontWeight: 'bold',
+    fontSize: 14,
+    fontWeight: '500',
   },
-  reviewButton: {
-    borderColor: '#006D5B',
-  },
-  bottomNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    paddingVertical: 10,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#ddd',
-  },
-  navItem: {
-    alignItems: 'center',
-  },
-  navText: {
-    fontSize: 12,
-    color: '#006D5B',
-    marginTop: 4,
+  buyAgainButton: {
+    borderColor: Colors.light.primary,
   },
 });

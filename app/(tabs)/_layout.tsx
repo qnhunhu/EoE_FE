@@ -28,11 +28,11 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="MyOrders"
-        options={{
-          title: 'MY ORDERS',
-          tabBarIcon: ({ color }) => <Ionicons size={28} name="cart" color={color} />,
-        }}
-      />
+  options={{
+    title: 'MY ORDERS',
+    tabBarIcon: ({ color }) => <Ionicons size={28} name="cart" color={color} />,
+  }}
+/>
       <Tabs.Screen
         name="NotificationScreen"
         options={{

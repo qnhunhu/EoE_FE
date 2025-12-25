@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Account } from '../types/Account';
-
+import axios from 'axios';
+import Config from '../constants';
 
 
 import { MOCK_ACCOUNT } from '@/constants/MockData';
@@ -12,8 +13,10 @@ export default function useAccount(id: number) {
     useEffect(() => {
         const fetchAccount = async () => {
             // Simulate network delay
-            setTimeout(() => {
-                setAccount(MOCK_ACCOUNT);
+            setTimeout(async () => {
+                        // setAccount(MOCK_ACCOUNT);
+                        const response = await axios.get<Account>(`${Config.API_BASE_URL}/api/Auth/${id}`);
+        setAccount(response.data);
                 setLoading(false);
             }, 1000);
         };

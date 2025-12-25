@@ -1,8 +1,11 @@
 import globalStyles from '@/assets/styles/GlobalStyle';
 import { Colors } from '@/constants/Colors';
+import { useAuth } from '@/contexts/AuthContent';
+import useAddToCart from '@/hooks/useAddToCart';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useToast } from '@/components/GlobalToast';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function ProductCard({
@@ -21,9 +24,18 @@ export default function ProductCard({
   sold: number;
 }) {
   const router = useRouter();
+  const { addToCart } = useAddToCart();
+  const {userId} = useAuth();
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    console.log('ProductCard props:', { id, image, title, oldPrice, newPrice, sold });
+    console.log('User ID from Auth Context:', userId);
+  }, [id, image, title, oldPrice, newPrice, sold, userId]);
 
   const handlePress = () => {
     router.push({ pathname: '/ProductDetail', params: { id } });
+    console.log('Navigating to product with id:', id);
   };
 
   const formatPrice = (price: number) => {
@@ -31,6 +43,7 @@ export default function ProductCard({
   };
 
   return (
+    <>
     <TouchableOpacity
       style={[styles.card, globalStyles.shadow]}
       onPress={handlePress}
@@ -62,12 +75,24 @@ export default function ProductCard({
             <Ionicons name="flame" size={12} color={Colors.light.accent} />
             <Text style={styles.soldText}>Sold {sold}</Text>
           </View>
-          <TouchableOpacity style={styles.addBtn}>
-            <Ionicons name="add" size={20} color="#fff" />
+          <TouchableOpacity
+            style={styles.addBtn}
+            onPress={async () => {
+              const res = await addToCart({ eggId: id, quantity: 1, buyerId: userId || 1 });
+              if (res?.ok) {
+                showToast('Added to cart');
+              } else {
+                showToast(res?.error || 'Failed to add to cart');
+              }
+            }}
+          >
+            <Ionicons name="add" size={20} color="#fff"  />
           </TouchableOpacity>
         </View>
       </View>
     </TouchableOpacity>
+  
+  </>
   );
 }
 

@@ -1,30 +1,29 @@
 
-import ProductCard from '@/components/ProductCard';
 import { Colors } from '@/constants/Colors';
 import useEggProducts from '@/hooks/useEggProducts'; // Assuming this hook exists and fetches data
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  FlatList,
   Platform,
-  ScrollView,
-  StatusBar,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
   const router = useRouter();
   const { products, loading } = useEggProducts();
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [query, setQuery] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const handleCartPress = () => router.push('/ShoppingCart');
+
+  useEffect(() => {
+  }, [products]);
 
   const renderHeader = () => (
     <View style={styles.headerContainer}>
@@ -34,10 +33,10 @@ export default function HomeScreen() {
           <Text style={styles.location}>Ho Chi Minh City, VN</Text>
         </View>
         <View style={styles.iconRow}>
-          {/* <TouchableOpacity style={styles.iconButton} onPress={handleCartPress}>
+          <TouchableOpacity style={styles.iconButton} onPress={handleCartPress}>
             <Ionicons name="notifications-outline" size={24} color={Colors.light.text.primary} />
             <View style={styles.badge}><Text style={styles.badgeText}>2</Text></View>
-          </TouchableOpacity> */}
+          </TouchableOpacity>
 
           <TouchableOpacity style={styles.iconButton} onPress={handleCartPress}>
             <Ionicons name="cart-outline" size={24} color={Colors.light.text.primary} />
@@ -53,13 +52,15 @@ export default function HomeScreen() {
           placeholder="Search fresh eggs..."
           placeholderTextColor={Colors.light.text.secondary}
           style={styles.searchInput}
+          value={query}
+          onChangeText={setQuery}
+          returnKeyType="search"
+          onSubmitEditing={() => setSearchTerm(query.trim())}
         />
-        <TouchableOpacity style={styles.filterBtn}>
-          <Ionicons name="options-outline" size={20} color="#fff" />
-        </TouchableOpacity>
       </View>
     </View>
   );
+
 
   const categories = [
     { id: '1', label: 'All', icon: 'apps-outline' },
@@ -69,81 +70,40 @@ export default function HomeScreen() {
     { id: '5', label: 'Salted', icon: 'cafe-outline' },
   ];
 
-  return (
-    <View style={styles.container}>
+  // Process products into different sections
+  const { popularProducts, freshProducts, specialProducts } = React.useMemo(() => {
+    // Create a copy of the products array to avoid mutating the original
+    const productsCopy = [...products];
+    
+    // 1. Popular Products - Top 4 by soldCount (descending)
+    const popularProducts = [...productsCopy]
+      .sort((a, b) => (b.soldCount || 0) - (a.soldCount || 0))
+      .slice(0, 4);
+    
+    // 2. Fresh Everyday - Products with 'fresh' in name (case insensitive)
+    const freshProducts = productsCopy.filter(product => 
+      product.name?.toLowerCase().includes('fresh')
+    );
+    
+    // 3. Special Choice - Bottom 4 by soldCount (ascending)
+    const specialProducts = [...productsCopy]
+      .sort((a, b) => (a.soldCount || 0) - (b.soldCount || 0))
+      .slice(0, 4);
+    
+    return { popularProducts, freshProducts, specialProducts };
+  }, [products]);
 
-      <SafeAreaView style={styles.content}>
-        <FlatList
-          ListHeaderComponent={
-            <>
-              {renderHeader()}
-
-              {/* Categories */}
-              <View style={styles.categorySection}>
-                <Text style={styles.sectionTitle}>Categories</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
-                  {categories.map((cat) => {
-                    const isSelected = selectedCategory === cat.label;
-                    return (
-                      <TouchableOpacity
-                        key={cat.id}
-                        style={[
-                          styles.categoryChip,
-                          isSelected && styles.categoryChipSelected
-                        ]}
-                        onPress={() => setSelectedCategory(cat.label)}
-                      >
-                        <Ionicons
-                          name={cat.icon as any}
-                          size={16}
-                          color={isSelected ? '#fff' : Colors.light.text.secondary}
-                          style={{ marginRight: 6 }}
-                        />
-                        <Text style={[
-                          styles.categoryText,
-                          isSelected && styles.categoryTextSelected
-                        ]}>
-                          {cat.label}
-                        </Text>
-                      </TouchableOpacity>
-                    )
-                  })}
-                </ScrollView>
-              </View>
-
-              <View style={styles.productListHeader}>
-                <Text style={styles.sectionTitle}>Popular Products</Text>
-                <TouchableOpacity>
-                  <Text style={styles.seeAll}>See All</Text>
-                </TouchableOpacity>
-              </View>
-            </>
-          }
-          data={products}
-          keyExtractor={(item) => item.eggId.toString()}
-          renderItem={({ item }) => (
-            <ProductCard
-              id={item.eggId}
-              sold={item.soldCount}
-              title={item.name}
-              oldPrice={item.price * 1.2} // Mock old price
-              newPrice={item.price}
-              image={item.imageURL}
-            />
-          )}
-          numColumns={2}
-          columnWrapperStyle={{ justifyContent: 'space-between', paddingHorizontal: 16 }}
-          contentContainerStyle={{ paddingBottom: 100 }}
-          ListEmptyComponent={
-            loading ? <ActivityIndicator size="large" color={Colors.light.primary} style={{ marginTop: 20 }} /> :
-              <Text style={{ textAlign: 'center', marginTop: 20 }}>No products found.</Text>
-          }
-          showsVerticalScrollIndicator={false}
-        />
-      </SafeAreaView>
-    </View>
-  );
+  // Filter products based on search and category
+  const filteredProducts = React.useMemo(() => {
+    const q = (searchTerm || query || '').toLowerCase();
+    return products.filter((p) => {
+      const matchesQuery = q ? (p.name || '').toLowerCase().includes(q) : true;
+      const matchesCategory = selectedCategory === 'All' ? true : (p.category || '').toLowerCase() === selectedCategory.toLowerCase();
+      return matchesQuery && matchesCategory;
+    });
+  }, [products, searchTerm, query, selectedCategory]);
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -219,10 +179,7 @@ const styles = StyleSheet.create({
     color: Colors.light.text.primary,
   },
   filterBtn: {
-    backgroundColor: Colors.light.primary,
-    padding: 8,
-    borderRadius: 8,
-    marginLeft: 8,
+    display: 'none',
   },
   categorySection: {
     marginBottom: 24,
@@ -267,6 +224,6 @@ const styles = StyleSheet.create({
   seeAll: {
     fontSize: 14,
     color: Colors.light.primary,
-    fontWeight: '600',
+    fontWeight: '600'
   }
 });

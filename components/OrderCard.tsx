@@ -51,12 +51,16 @@ export default function OrderCard({ order, role, onStatusUpdated }: { order: Ord
     }
     return null;
   };
+console.log(
+  'ORDER DETAILS',
+  JSON.stringify(order.orderDetails, null, 2)
+);
 
   const renderPaymentInfo = () => (
     <View style={styles.orderDetails}>
-      <Text style={styles.textGray}>Payment time: {order.payment.paymentDate}</Text>
-      <Text style={styles.textGray}>Payment method: {order.payment.method}</Text>
-      <Text style={styles.textGray}>Total: ${order.payment.amount}</Text>
+      <Text style={styles.textGray}>Payment time: {order.payment?.paymentDate}</Text>
+      <Text style={styles.textGray}>Payment method: {order.payment?.method}</Text>
+      <Text style={styles.textGray}>Total: ${order.payment?.amount}</Text>
     </View>
   );
 

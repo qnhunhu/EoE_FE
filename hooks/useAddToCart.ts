@@ -13,7 +13,7 @@ export default function useAddToCart() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
 
-  const addToCart = async (command: AddToCartCommand) => {
+  const addToCart = async (command: AddToCartCommand): Promise<{ ok: boolean; error?: string }> => {
     setLoading(true);
     setError(null);
     setSuccess(false);
@@ -21,9 +21,11 @@ export default function useAddToCart() {
     try {
       await axios.post(`${Config.API_BASE_URL}/api/Cart/add`, command);
       setSuccess(true);
+      return { ok: true };
     } catch (err: any) {
       console.error('Add to cart failed:', err);
       setError(err.response?.data?.message || err.message || 'Unknown error');
+      return { ok: false, error: err.response?.data?.message || err.message || 'Unknown error' };
     } finally {
       setLoading(false);
     }

@@ -11,24 +11,25 @@ export default function useEggProducts() {
   const fetchProducts = () => {
     setLoading(true);
     // Simulate network delay
-    setTimeout(() => {
-      setProducts(require('../constants/MockData').MOCK_PRODUCTS);
-      setLoading(false);
-    }, 500);
+  //   setTimeout(() => {
+  //     setProducts(require('../constants/MockData').MOCK_PRODUCTS);
+  //     setLoading(false);
+  //   }, 500);
 
-    // axios
-    //   .get(`${Config.API_BASE_URL}/api/Egg`)
-    //   .then((res) => {
-    //     setProducts(res.data);
-    //     setError(null);
-    //   })
-    //   .catch((err) => {
-    //     console.error('Failed to fetch eggs', err);
-    //     setError('Failed to fetch products');
-    //   })
-    //   .finally(() => {
-    //     setLoading(false);
-    //   });
+    axios
+      .get(`${Config.API_BASE_URL}/api/Egg`)
+      .then((res) => {
+        setProducts(res.data);
+        // console.log('Fetched eggs:', res.data);
+        setError(null);
+      })
+      .catch((err) => {
+        console.error('Failed to fetch eggs', err);
+        setError('Failed to fetch products');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
   // Fetch data on mount
@@ -41,6 +42,7 @@ export default function useEggProducts() {
       setLoading(true);
       await axios.post(`${Config.API_BASE_URL}/api/Egg`, newProduct);
       fetchProducts(); // Refresh after add
+      
     } catch (err) {
       console.error('Failed to add product', err);
       setError('Failed to add product');

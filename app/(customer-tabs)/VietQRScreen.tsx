@@ -37,10 +37,10 @@ export default function VietQRScreen() {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        accountNo: "113366668888",
-                        accountName: "TONG DOANH NGOC",
-                        acqId: "970422",
-                        addInfo: `Thanh toan don hang ${orderId}`,
+                        accountNo: "303704070001352",
+                        accountName: "HUYNH NNGUYEN QUYNH NHU",
+                        acqId: "970437",
+                        addInfo: `Payment for order ${orderId}`,
                         amount: totalAmount,
                         template: "print",
                     }),
@@ -80,12 +80,12 @@ export default function VietQRScreen() {
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
                     <Ionicons name="arrow-back" size={24} color={Colors.light.text.primary} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Thanh toán VietQR</Text>
+                <Text style={styles.headerTitle}>VietQR Payment</Text>
             </View>
 
             <View style={styles.content}>
                 <Text style={styles.instructionText}>
-                    Quét mã QR sau để thanh toán đơn hàng
+                    Scan the QR code below to pay for your order
                 </Text>
 
                 {loading ? (
@@ -95,7 +95,7 @@ export default function VietQRScreen() {
                 )}
 
                 <View style={styles.orderInfo}>
-                    <Text style={styles.amountLabel}>Số tiền cần thanh toán:</Text>
+                    <Text style={styles.amountLabel}>Amount to pay:</Text>
                     <Text style={styles.amountValue}>
                         {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(totalAmount))}
                     </Text>
@@ -104,7 +104,7 @@ export default function VietQRScreen() {
 
             <View style={styles.bottomBar}>
                 <TouchableOpacity style={styles.confirmBtn} onPress={handlePaymentConfirmation}>
-                    <Text style={styles.confirmBtnText}>Đã thanh toán</Text>
+                    <Text style={styles.confirmBtnText}>Paid</Text>
                 </TouchableOpacity>
             </View>
         </SafeAreaView>

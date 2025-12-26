@@ -25,7 +25,7 @@ const ShoppingCart = () => {
     const navigation = useNavigation();
     const router = useRouter();
     const { userId } = useAuth();
-    const { cart, loading, error, refetch, removeFromCart } = useCart(userId || 3) as any;
+    const { cart, loading, error, refetch, removeFromCart } = useCart(userId || 7) as any;
     const { products } = useEggProducts();
 
     const [items, setItems] = useState<any[]>([]);
@@ -39,7 +39,7 @@ const ShoppingCart = () => {
 
     useEffect(() => {
         if (cart && products) {
-            const merged = cart.items.map((item) => {
+            const merged = cart.items.map((item: any) => {
                 const product = products.find(p => p.eggId === item.eggId);
                 return {
                     ...item,

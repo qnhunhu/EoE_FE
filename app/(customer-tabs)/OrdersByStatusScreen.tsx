@@ -37,21 +37,32 @@ import {
 
 export default function OrdersByStatusScreen() {
 
-    const { status } = useLocalSearchParams<{ status: string }>();
+    const { status, orders: ordersParam } = useLocalSearchParams<{ status: string, orders?: string }>();
 
     const router = useRouter();
 
     const { userId, role } = useAuth();
 
-    const { orders, loading, error } = useOrdersByBuyer(userId);
+    const { orders: fetchedOrders, loading, error } = useOrdersByBuyer(userId);
 
 
 
     const filteredOrders = React.useMemo(() => {
+        // Ưu tiên sử dụng dữ liệu truyền qua params (bao gồm cả mock data từ MyOrders)
+        if (ordersParam) {
+            try {
+                const parsed = JSON.parse(ordersParam);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    return parsed;
+                }
+            } catch (e) {
+                console.log("Error parsing orders param", e);
+            }
+        }
 
-        if (!orders || !status) return [];
+        if (!fetchedOrders || !status) return [];
 
-        return orders
+        return fetchedOrders
 
             .filter(o => o.status === status)
 
@@ -65,7 +76,7 @@ export default function OrdersByStatusScreen() {
 
             });
 
-    }, [orders, status]);
+    }, [fetchedOrders, status, ordersParam]);
 
 
 
@@ -97,7 +108,7 @@ export default function OrdersByStatusScreen() {
 
     const renderContent = () => {
 
-        if (loading) {
+        if (loading && filteredOrders.length === 0) {
 
             return <ActivityIndicator size="large" color={Colors.light.primary} style={styles.centered} />;
 
@@ -105,7 +116,7 @@ export default function OrdersByStatusScreen() {
 
 
 
-        if (error) {
+        if (error && filteredOrders.length === 0) {
 
             return <Text style={styles.centered}>Error fetching orders.</Text>;
 

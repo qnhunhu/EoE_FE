@@ -29,15 +29,29 @@ export default function ConfirmPaymentScreen() {
 
     const handleBuyNow = () => {
         setIsLoading(true);
-        setTimeout(() => {
-            setIsLoading(false);
-            createOrder({
-                buyerId: buyerId ? Number(buyerId) : 3,
-                distributorId: distributorId ? Number(distributorId) : 1,
-                paymentMethod: getStringParam(paymentMethod) || 'Cash on Delivery',
+        setTimeout(async () => {
+            const method = getStringParam(paymentMethod) || 'Cash on Delivery';
+            
+            // Gọi API tạo đơn hàng
+            const res: any = await createOrder({
+                buyerId: buyerId ? Number(buyerId) : (distributorId) : 1,
+                paymentMethod: method,
                 shippingAddress: getStringParam(shippingAddress) || '123 Default St, City, Country',
             });
-            router.push('/PaymentSuccessfulScreen');
+            
+            setIsLoading(false);
+
+            if (method === 'VietQR') {
+                router.push({
+                    pathname: '/(customer-tabs)/VietQRScreen',
+                    params: { 
+                        totalAmount: totalPrice, 
+                        orderId: res?.orderId || Math.floor(Math.random() * 100000).toString() 
+                    }
+                });
+            } else {
+                router.push('/PaymentSuccessfulScreen');
+            }
         }, 2000)
     };
 

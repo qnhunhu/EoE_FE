@@ -24,10 +24,10 @@ export default function TransactionInformationScreen() {
     const navigation = useNavigation();
     const router = useRouter();
     const { userId } = useAuth();
-    const { cart } = useCart(userId || 3);
+    const { cart } = useCart(userId || 7);
     const { products } = useEggProducts();
     const [items, setItems] = useState<any[]>([]);
-    const { account } = useAccount(userId || 3);
+    const { account } = useAccount(userId || 7);
 
     useEffect(() => {
         if (cart && products) {
@@ -207,7 +207,7 @@ export default function TransactionInformationScreen() {
                                 price: String(oldPrice.toFixed(0)),
                                 discount: String(discount.toFixed(0)),
                                 totalPrice: String(totalPrice.toFixed(0)),
-                                buyerId: String(userId || 3),
+                                buyerId: String(userId || 7),
                                 distributorId: String(pickupLocation.userId || 10),
                                 paymentMethod: selectedPaymentMethod ?? 'Cash on Delivery',
                                 shippingAddress: account?.address ?? '123 Default St',
@@ -452,7 +452,7 @@ export function SelectEndow({ onSelect }: { onSelect: (endow: { id: number; name
 
 export function SelectPaymentMethod({ onSelect }: { onSelect: (method: string) => void }) {
     const [modalVisible, setModalVisible] = useState(false);
-    const paymentMethods = ['Credit Card', 'PayPal', 'Cash on Delivery'];
+    const paymentMethods = ['Credit Card', 'PayPal', 'Cash on Delivery', 'VietQR'];
 
     const handleSelect = (method: string) => {
         onSelect(method);

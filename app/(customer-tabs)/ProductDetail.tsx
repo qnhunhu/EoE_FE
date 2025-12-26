@@ -52,7 +52,7 @@ export default function ProductDetailScreen() {
         const res = await addToCart({
             eggId: Number(id) || 1,
             quantity: quantity,
-            buyerId: userId || 1,
+            buyerId: userId || 7,
         });
         setIsModalVisible(false);
         if (res?.ok) {

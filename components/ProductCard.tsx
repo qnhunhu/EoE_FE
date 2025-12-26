@@ -78,7 +78,7 @@ export default function ProductCard({
           <TouchableOpacity
             style={styles.addBtn}
             onPress={async () => {
-              const res = await addToCart({ eggId: id, quantity: 1, buyerId: userId || 1 });
+              const res = await addToCart({ eggId: id, quantity: 1, buyerId: userId || 7 });
               if (res?.ok) {
                 showToast('Added to cart');
               } else {

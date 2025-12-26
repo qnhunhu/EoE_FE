@@ -11,22 +11,22 @@ import { Ionicons } from '@expo/vector-icons';
 
 const statusConfig: Record<string, { title: string; color: string; icon: string }> = {
   [OrderStatus.ORDERED]: {
-    title: 'Đang xử lý',
+    title: 'Processing',
     color: '#FFA500',
     icon: 'time-outline',
   },
   [OrderStatus.DELIVERING]: {
-    title: 'Đang giao hàng',
+    title: 'Delivering',
     color: '#1E90FF',
     icon: 'bicycle-outline',
   },
   [OrderStatus.DELIVERED]: {
-    title: 'Đã giao hàng',
+    title: 'Delivered',
     color: '#32CD32',
     icon: 'checkmark-done-outline',
   },
   [OrderStatus.CANCELLED]: {
-    title: 'Đã hủy',
+    title: 'Cancelled',
     color: '#FF0000',
     icon: 'close-circle-outline',
   },
@@ -34,8 +34,82 @@ const statusConfig: Record<string, { title: string; color: string; icon: string 
 
 export default function MyOrders() {
   const { userId } = useAuth();
-  const { orders } = useOrdersByBuyer(userId || 3);
+  const { orders: fetchedOrders } = useOrdersByBuyer(userId || 7);
   const router = useRouter();
+
+  // Mock data for testing DELIVERED status
+  const mockOrders: Order[] = [
+    {
+      orderId: 9991,
+      buyerId: userId || 7,
+      distributorId: 10,
+      orderDate: new Date().toISOString(),
+      status: OrderStatus.DELIVERED,
+      payment: {
+        paymentId: 1,
+        amount: 150000,
+        method: 'COD',
+        paymentDate: new Date().toISOString(),
+        orderId: 9991,
+      },
+      complaints: [],
+      returnRequest: null,
+      orderDetails: [
+        {
+          eggId: 1,
+          eggName: 'Trứng gà ta (Mock)',
+          eggImageURL: 'https://img.freepik.com/free-photo/brown-eggs-wooden-bowl_1150-25036.jpg',
+          quantity: 10,
+          unitPrice: 5000,
+          orderDetailId: 1,
+          orderId: 9991,
+          egg: {} as any,
+        },
+        {
+            eggId: 2,
+            eggName: 'Trứng vịt (Mock)',
+            eggImageURL: 'https://img.freepik.com/free-photo/fresh-white-eggs-paper-tray_114579-40622.jpg',
+            quantity: 5,
+            unitPrice: 8000,
+            orderDetailId: 2,
+            orderId: 9991,
+            egg: {} as any,
+        }
+      ],
+      shippingAddress: '123 Mock St'
+    },
+    {
+        orderId: 9992,
+        buyerId: userId || 7,
+        distributorId: 10,
+        orderDate: new Date(Date.now() - 86400000).toISOString(),
+        status: OrderStatus.DELIVERED,
+        payment: {
+          paymentId: 2,
+          amount: 50000,
+          method: 'VNPay',
+          paymentDate: new Date().toISOString(),
+          orderId: 9992,
+        },
+        complaints: [],
+        returnRequest: null,
+        orderDetails: [
+          {
+            eggId: 3,
+            eggName: 'Trứng cút (Mock)',
+            eggImageURL: 'https://img.freepik.com/free-photo/quail-eggs-wooden-bowl_1150-25040.jpg',
+            quantity: 20,
+            unitPrice: 2500,
+            orderDetailId: 3,
+            orderId: 9992,
+            egg: {} as any,
+          }
+        ],
+        shippingAddress: '456 Mock Ave'
+      }
+  ];
+
+  const orders = [...(fetchedOrders || []), ...mockOrders];
 
   const groupedOrders = orders.reduce(
     (acc: Record<OrderStatus, Order[]>, order) => {
@@ -63,7 +137,7 @@ export default function MyOrders() {
     >
       <View style={styles.orderHeader}>
         <View style={styles.orderInfo}>
-          <Text style={styles.orderId}>Mã đơn: #{order.orderId}</Text>
+          <Text style={styles.orderId}>Order ID: #{order.orderId}</Text>
           <Text style={styles.orderDate}>{order.payment?.paymentDate ? new Date(order.payment.paymentDate).toLocaleDateString() : ''}</Text>
         </View>
         <View style={[styles.statusBadge, { backgroundColor: statusConfig[order.status]?.color + '20' }]}>
@@ -93,13 +167,13 @@ export default function MyOrders() {
           </View>
         ))}
         {order.orderDetails.length > 2 && (
-          <Text style={styles.moreItems}>+{order.orderDetails.length - 2} sản phẩm khác</Text>
+          <Text style={styles.moreItems}>+{order.orderDetails.length - 2} other items</Text>
         )}
       </View>
 
       <View style={styles.orderFooter}>
         <Text style={styles.totalPrice}>
-          Tổng tiền: <Text style={styles.price}>{calculateTotal(order).toLocaleString()}đ</Text>
+          Total: <Text style={styles.price}>{calculateTotal(order).toLocaleString()}đ</Text>
         </Text>
         <View style={styles.actionButtons}>
           {order.status === OrderStatus.DELIVERED && (
@@ -111,7 +185,7 @@ export default function MyOrders() {
                   params: { order: JSON.stringify(order) }
                 })}
               >
-                <Text style={styles.actionButtonText}>Đánh giá</Text>
+                <Text style={styles.actionButtonText}>Review</Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={[styles.actionButton, styles.buyAgainButton]}
@@ -119,7 +193,7 @@ export default function MyOrders() {
                   // Handle buy again logic
                 }}
               >
-                <Text style={[styles.actionButtonText, { color: Colors.light.primary }]}>Mua lại</Text>
+                <Text style={[styles.actionButtonText, { color: Colors.light.primary }]}>Buy Again</Text>
               </TouchableOpacity>
             </>
           )}
@@ -131,7 +205,7 @@ export default function MyOrders() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Đơn hàng của tôi</Text>
+        <Text style={styles.headerTitle}>My Orders</Text>
       </View>
 
       <ScrollView 
@@ -154,7 +228,7 @@ export default function MyOrders() {
                   },
                 })}
               >
-                <Text style={styles.seeMore}>Xem tất cả</Text>
+                <Text style={styles.seeMore}>See All</Text>
               </TouchableOpacity>
             </View>
             {orders.map(renderOrderItem)}

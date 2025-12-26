@@ -1,13 +1,12 @@
-import React from 'react';
-import OrderCard from '@/components/OrderCard';
 import { Colors } from '@/constants/Colors';
 import { useAuth } from '@/contexts/AuthContent';
 import useOrdersByBuyer from '@/hooks/useOrderByBuyer';
 import { Order, OrderStatus } from '@/types/Order';
-import { useRouter } from 'expo-router';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import React from 'react';
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const statusConfig: Record<string, { title: string; color: string; icon: string }> = {
   [OrderStatus.ORDERED]: {
@@ -37,79 +36,7 @@ export default function MyOrders() {
   const { orders: fetchedOrders } = useOrdersByBuyer(userId || 7);
   const router = useRouter();
 
-  // Mock data for testing DELIVERED status
-  const mockOrders: Order[] = [
-    {
-      orderId: 9991,
-      buyerId: userId || 7,
-      distributorId: 10,
-      orderDate: new Date().toISOString(),
-      status: OrderStatus.DELIVERED,
-      payment: {
-        paymentId: 1,
-        amount: 150000,
-        method: 'COD',
-        paymentDate: new Date().toISOString(),
-        orderId: 9991,
-      },
-      complaints: [],
-      returnRequest: null,
-      orderDetails: [
-        {
-          eggId: 1,
-          eggName: 'Trứng gà ta (Mock)',
-          eggImageURL: 'https://img.freepik.com/free-photo/brown-eggs-wooden-bowl_1150-25036.jpg',
-          quantity: 10,
-          unitPrice: 5000,
-          orderDetailId: 1,
-          orderId: 9991,
-          egg: {} as any,
-        },
-        {
-            eggId: 2,
-            eggName: 'Trứng vịt (Mock)',
-            eggImageURL: 'https://img.freepik.com/free-photo/fresh-white-eggs-paper-tray_114579-40622.jpg',
-            quantity: 5,
-            unitPrice: 8000,
-            orderDetailId: 2,
-            orderId: 9991,
-            egg: {} as any,
-        }
-      ],
-      shippingAddress: '123 Mock St'
-    },
-    {
-        orderId: 9992,
-        buyerId: userId || 7,
-        distributorId: 10,
-        orderDate: new Date(Date.now() - 86400000).toISOString(),
-        status: OrderStatus.DELIVERED,
-        payment: {
-          paymentId: 2,
-          amount: 50000,
-          method: 'VNPay',
-          paymentDate: new Date().toISOString(),
-          orderId: 9992,
-        },
-        complaints: [],
-        returnRequest: null,
-        orderDetails: [
-          {
-            eggId: 3,
-            eggName: 'Trứng cút (Mock)',
-            eggImageURL: 'https://img.freepik.com/free-photo/quail-eggs-wooden-bowl_1150-25040.jpg',
-            quantity: 20,
-            unitPrice: 2500,
-            orderDetailId: 3,
-            orderId: 9992,
-            egg: {} as any,
-          }
-        ],
-        shippingAddress: '456 Mock Ave'
-      }
-  ];
-
-  const orders = [...(fetchedOrders || []), ...mockOrders];
+  const orders = fetchedOrders || [];
 
   const groupedOrders = orders.reduce(
     (acc: Record<OrderStatus, Order[]>, order) => {
@@ -141,10 +68,10 @@ export default function MyOrders() {
           <Text style={styles.orderDate}>{order.payment?.paymentDate ? new Date(order.payment.paymentDate).toLocaleDateString() : ''}</Text>
         </View>
         <View style={[styles.statusBadge, { backgroundColor: statusConfig[order.status]?.color + '20' }]}>
-          <Ionicons 
-            name={statusConfig[order.status]?.icon as any} 
-            size={16} 
-            color={statusConfig[order.status]?.color} 
+          <Ionicons
+            name={statusConfig[order.status]?.icon as any}
+            size={16}
+            color={statusConfig[order.status]?.color}
           />
           <Text style={[styles.statusText, { color: statusConfig[order.status]?.color }]}>
             {statusConfig[order.status]?.title || order.status}
@@ -155,9 +82,9 @@ export default function MyOrders() {
       <View style={styles.orderProducts}>
         {order.orderDetails.slice(0, 2).map((item, idx) => (
           <View key={idx} style={styles.productItem}>
-            <Image 
-              source={{ uri: item.eggImageURL }} 
-              style={styles.productImage} 
+            <Image
+              source={{ uri: item.eggImageURL }}
+              style={styles.productImage}
               resizeMode="cover"
             />
             <View style={styles.productInfo}>
@@ -178,7 +105,7 @@ export default function MyOrders() {
         <View style={styles.actionButtons}>
           {order.status === OrderStatus.DELIVERED && (
             <>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.actionButton}
                 onPress={() => router.push({
                   pathname: '/(customer-tabs)/ReviewProductScreen',
@@ -187,7 +114,7 @@ export default function MyOrders() {
               >
                 <Text style={styles.actionButtonText}>Review</Text>
               </TouchableOpacity>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.actionButton, styles.buyAgainButton]}
                 onPress={() => {
                   // Handle buy again logic
@@ -208,7 +135,7 @@ export default function MyOrders() {
         <Text style={styles.headerTitle}>My Orders</Text>
       </View>
 
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
@@ -218,13 +145,13 @@ export default function MyOrders() {
               <Text style={styles.sectionTitle}>
                 {statusConfig[status as OrderStatus]?.title || status}
               </Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 onPress={() => router.push({
                   pathname: '/(customer-tabs)/OrdersByStatusScreen',
-                  params: { 
-                    status, 
+                  params: {
+                    status,
                     title: statusConfig[status as OrderStatus]?.title || status,
-                    orders: JSON.stringify(orders) 
+                    orders: JSON.stringify(orders)
                   },
                 })}
               >

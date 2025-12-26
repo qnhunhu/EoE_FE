@@ -1,7 +1,8 @@
 
 import ProductCard from '@/components/ProductCard';
 import { Colors } from '@/constants/Colors';
-import useEggProducts from '@/hooks/useEggProducts'; // Assuming this hook exists and fetches data
+import useEggProducts from '@/hooks/useEggProducts';
+import useSearchEggs from '@/hooks/useSearchEggs';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -19,6 +20,7 @@ import {
 export default function HomeScreen() {
   const router = useRouter();
   const { products, loading } = useEggProducts();
+  const { results: searchResults, loading: searchLoading, searchEggs, clearResults } = useSearchEggs();
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [query, setQuery] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -58,7 +60,15 @@ export default function HomeScreen() {
           value={query}
           onChangeText={setQuery}
           returnKeyType="search"
-          onSubmitEditing={() => setSearchTerm(query.trim())}
+          onSubmitEditing={() => {
+            const q = query.trim();
+            setSearchTerm(q);
+            if (q) {
+              searchEggs(q);
+            } else {
+              clearResults();
+            }
+          }}
         />
       </View>
     </View>
@@ -77,34 +87,40 @@ export default function HomeScreen() {
   const { popularProducts, freshProducts, specialProducts } = React.useMemo(() => {
     // Create a copy of the products array to avoid mutating the original
     const productsCopy = [...products];
-    
+
     // 1. Popular Products - Top 4 by soldCount (descending)
     const popularProducts = [...productsCopy]
       .sort((a, b) => (b.soldCount || 0) - (a.soldCount || 0))
       .slice(0, 4);
-    
+
     // 2. Fresh Everyday - Products with 'fresh' in name (case insensitive)
-    const freshProducts = productsCopy.filter(product => 
+    const freshProducts = productsCopy.filter(product =>
       product.name?.toLowerCase().includes('fresh')
     );
-    
+
     // 3. Special Choice - Bottom 4 by soldCount (ascending)
     const specialProducts = [...productsCopy]
       .sort((a, b) => (a.soldCount || 0) - (b.soldCount || 0))
       .slice(0, 4);
-    
+
     return { popularProducts, freshProducts, specialProducts };
   }, [products]);
 
   // Filter products based on search and category
   const filteredProducts = React.useMemo(() => {
-    const q = (searchTerm || query || '').toLowerCase();
+    // If we have search results from API, use them
+    if (searchTerm && searchResults.length > 0) {
+      if (selectedCategory === 'All') return searchResults;
+      return searchResults.filter((p) => (p.category || '').toLowerCase() === selectedCategory.toLowerCase());
+    }
+    // Otherwise filter client-side
+    const q = (searchTerm || '').toLowerCase();
     return products.filter((p) => {
       const matchesQuery = q ? (p.name || '').toLowerCase().includes(q) : true;
       const matchesCategory = selectedCategory === 'All' ? true : (p.category || '').toLowerCase() === selectedCategory.toLowerCase();
       return matchesQuery && matchesCategory;
     });
-  }, [products, searchTerm, query, selectedCategory]);
+  }, [products, searchTerm, searchResults, selectedCategory]);
 
   return (
     <View style={styles.container}>

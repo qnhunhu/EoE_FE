@@ -26,11 +26,15 @@ export default function useLogin() {
       // }
       // return mockUser;
 
-        const res = await axios.post<AuthResponse>(`${Config.API_BASE_URL}/api/Auth/login`, data);
-        return res.data;
+      const res = await axios.post<AuthResponse>(`${Config.API_BASE_URL}/api/Auth/login`, {
+        Email: data.email,
+        Password: data.password,
+      });
+      return res.data;
     } catch (err: any) {
-      setError(err.message || 'Login failed'); // Adjusted to catch simple error object
-      console.error('Login failed', err);
+      const errorMessage = err.response?.data?.message || err.message || 'Login failed';
+      setError(errorMessage);
+      console.error('Login failed', err.response?.data || err.message);
       return null;
     } finally {
       setLoading(false);

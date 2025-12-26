@@ -1,0 +1,757 @@
+{
+	"info": {
+		"_postman_id": "40806de6-dc6a-4ee8-93ec-f0ded43c13c8",
+		"name": "SupplyEggsSystem API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "46269057",
+		"_collection_link": "https://bold-capsule-101127.postman.co/workspace/Team-Workspace~759e8715-478f-4a79-86a8-402398d60085/collection/46269057-40806de6-dc6a-4ee8-93ec-f0ded43c13c8?action=share&source=collection_link&creator=46269057"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"try {",
+									"  const json = pm.response.json();",
+									"  if (json && json.Token) {",
+									"    pm.collectionVariables.set('token', json.Token);",
+									"  }",
+									"  if (json && json.UserId) {",
+									"    pm.collectionVariables.set('userId', String(json.UserId));",
+									"    pm.collectionVariables.set('buyerId', String(json.UserId));",
+									"    pm.collectionVariables.set('sellerId', String(json.UserId));",
+									"    pm.collectionVariables.set('distributorId', String(json.UserId));",
+									"  }",
+									"} catch (e) {}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"Email\": \"test.user@example.com\",\n  \"Password\": \"P@ssw0rd!\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Register",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"try {",
+									"  const json = pm.response.json();",
+									"  if (json && json.Token) pm.collectionVariables.set('token', json.Token);",
+									"  if (json && json.UserId) pm.collectionVariables.set('userId', String(json.UserId));",
+									"} catch (e) {}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"Name\": \"Test User\",\n  \"Email\": \"test.user@example.com\",\n  \"Password\": \"P@ssw0rd!\",\n  \"Phone\": \"0123456789\",\n  \"Address\": \"HCMC\",\n  \"Role\": 2\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update user",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"Id\": {{userId}},\n  \"Name\": \"Updated Name\",\n  \"Email\": null,\n  \"Password\": null,\n  \"Phone\": null,\n  \"Address\": null\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Auth/update",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Auth",
+								"update"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete user",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/Auth/delete/{{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Auth",
+								"delete",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all users",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/Auth",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Auth"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get user by id",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/Auth/{{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Auth",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Store",
+			"item": [
+				{
+					"name": "Create store",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"SellerId\": {{sellerId}},\n  \"StoreName\": \"My Store\",\n  \"BusinessLicense\": \"BL-0001\",\n  \"Description\": \"Demo store\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Store",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Store"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get store by id",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/Store/{{storeId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Store",
+								"{{storeId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Egg",
+			"item": [
+				{
+					"name": "Create egg",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"StoreId\": {{storeId}},\n  \"Name\": \"Egg A\",\n  \"Description\": \"Fresh eggs\",\n  \"Price\": 10000,\n  \"StockQuantity\": 100,\n  \"ImageURL\": \"https://example.com/egg.jpg\",\n  \"SoldCount\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Egg",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Egg"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update egg",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"EggId\": {{eggId}},\n  \"Name\": \"Egg A (updated)\",\n  \"Description\": \"Fresh eggs\",\n  \"Price\": 12000,\n  \"StockQuantity\": 80,\n  \"ImageURL\": \"https://example.com/egg.jpg\",\n  \"SoldCount\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Egg/{{eggId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Egg",
+								"{{eggId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete egg",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/Egg/{{eggId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Egg",
+								"{{eggId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all eggs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Egg",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Egg"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get egg by id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Egg/{{eggId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Egg",
+								"{{eggId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search eggs by name",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/Egg/search?name=Egg",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Egg",
+								"search"
+							],
+							"query": [
+								{
+									"key": "name",
+									"value": "Egg"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Cart",
+			"item": [
+				{
+					"name": "Add to cart",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"BuyerId\": {{buyerId}},\n  \"EggId\": {{eggId}},\n  \"Quantity\": 2\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Cart/add",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Cart",
+								"add"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get cart by buyer id",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/Cart/{{buyerId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Cart",
+								"{{buyerId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete cart item",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/Cart/item/{{cartItemId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Cart",
+								"item",
+								"{{cartItemId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Order",
+			"item": [
+				{
+					"name": "Create order",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"BuyerId\": {{buyerId}},\n  \"DistributorId\": {{distributorId}},\n  \"PaymentMethod\": \"COD\",\n  \"ShippingAddress\": \"HCMC\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/Order/create",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Order",
+								"create"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get seller order history",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/Order/seller-history/{{sellerId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Order",
+								"seller-history",
+								"{{sellerId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get buyer order history",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/Order/buyer-history/{{buyerId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Order",
+								"buyer-history",
+								"{{buyerId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get distributor order history",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/Order/distributorId-history/{{distributorId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"Order",
+								"distributorId-history",
+								"{{distributorId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "ReturnRequest",
+			"item": [
+				{
+					"name": "Create return request",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"OrderId\": {{orderId}},\n  \"Reason\": \"Damaged\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/ReturnRequest",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"ReturnRequest"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get return requests by buyer",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/ReturnRequest/buyer/{{buyerId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"ReturnRequest",
+								"buyer",
+								"{{buyerId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get return requests by seller",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/ReturnRequest/seller/{{sellerId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"ReturnRequest",
+								"seller",
+								"{{sellerId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5241"
+		},
+		{
+			"key": "token",
+			"value": ""
+		},
+		{
+			"key": "userId",
+			"value": "1"
+		},
+		{
+			"key": "buyerId",
+			"value": "1"
+		},
+		{
+			"key": "sellerId",
+			"value": "1"
+		},
+		{
+			"key": "distributorId",
+			"value": "1"
+		},
+		{
+			"key": "storeId",
+			"value": "1"
+		},
+		{
+			"key": "eggId",
+			"value": "1"
+		},
+		{
+			"key": "cartItemId",
+			"value": "1"
+		},
+		{
+			"key": "orderId",
+			"value": "1"
+		}
+	]
+}

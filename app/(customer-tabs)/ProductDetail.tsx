@@ -1,5 +1,6 @@
 
 import globalStyles from '@/assets/styles/GlobalStyle';
+import { useToast } from '@/components/GlobalToast';
 import ProductCard from '@/components/ProductCard';
 import { Colors } from '@/constants/Colors';
 import { useAuth } from '@/contexts/AuthContent';
@@ -10,7 +11,6 @@ import useStore from '@/hooks/useStore';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { useToast } from '@/components/GlobalToast';
 import {
     ActivityIndicator,
     Image,
@@ -42,9 +42,9 @@ export default function ProductDetailScreen() {
     const { store: storeData } = useStore(product?.storeId || 2);
 
     useEffect(() => {
-        console.log("product data",product)
-        console.log("store data",storeData)
-    },[product]);
+        console.log("product data", product)
+        console.log("store data", storeData)
+    }, [product]);
 
     const { showToast } = useToast();
 
@@ -131,7 +131,7 @@ export default function ProductDetailScreen() {
                             <Text style={styles.storeName}>{storeData?.storeName || 'Egg Store'}</Text>
                             <Text style={styles.storeSub}>{storeData?.eggCount || 10} products</Text>
                         </View>
-                        <TouchableOpacity style={styles.visitBtn}>
+                        <TouchableOpacity style={styles.visitBtn} onPress={() => router.push({ pathname: '/(customer-tabs)/StoreScreen', params: { storeId: product?.storeId || storeData?.storeId } })}>
                             <Text style={styles.visitText}>Visit Store</Text>
                         </TouchableOpacity>
                     </View>
@@ -257,7 +257,7 @@ export default function ProductDetailScreen() {
                     </View>
                 </View>
             </Modal>
-            
+
         </View>
     );
 }
